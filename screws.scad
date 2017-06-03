@@ -2,21 +2,21 @@
 function get_screw(name) =
   // different screws
   let(screws = [
-    // screw diameter; countersink parameter (head diameter, head depth)
+    // screw name; screw diameter; countersink parameter (head diameter, head depth)
     ["M3", 3, [6, 4.5]],
     ["M4", 4, [8, 5.5]] // NOTE: dimensions not confirmed
   ])
   screws[search([name], screws)[0]];
 
-// make a screw hole
-// @param screw which screw
+// make a machine screw
+// @param name which screw
 // @param length how long to make the hole maximally
 // @param countersink whether to countersink the screw
-// @param tolerance what tolerance to build in [mm] on all sides
-// @param stretch how much to stretch in [mm] on both sides in the x direction (to account for collapse in vertical printing)
-// @param fn $fn parameter
+// @param tolerance what tolerance to add (in mm) to the screw radius
+// @param stretch how much to stretch (in mm) the radius in the x direction (to account for collapse in vertical printing), added on top of the tolerance
 // @param z_plus how much thicker to make shape in z (for cutouts)
-module screw_hole (name, length, countersink = true, tolerance = 0.25, stretch = 0, fn = 30, z_plus = 0.1) {
+// @param fn $fn parameter
+module machine_screw (name, length, countersink = true, tolerance = 0.15, stretch = 0, z_plus = 0, fn = 30) {
   // parameters
   screw = get_screw(name);
   screw_d = screw[1]; // diameter
@@ -37,9 +37,50 @@ module screw_hole (name, length, countersink = true, tolerance = 0.25, stretch =
   }
 }
 
-// examples (commented out so can include this file in others)
-screw_hole("M3", 5, countersink = false);
-color("green") translate([0, 10, 0]) screw_hole("M3", 10);
-color("red") translate([0, -10, 0]) screw_hole("M4", 8);
-color("blue") translate([0, -20, 0]) screw_hole("M4", 3, z_plus = 1);
-color("purple") translate([0, 20, 0]) screw_hole("M3", 5, stretch = 0.3);
+// examples
+color("yellow") machine_screw("M3", 5, countersink = false);
+color("green") translate([0, 10, 0]) machine_screw("M3", 10);
+color("purple") translate([0, 20, 0]) machine_screw("M3", 5, tolerance = 0.5, stretch = 0.5);
+color("red") translate([0, -10, 0]) machine_screw("M4", 8);
+color("blue") translate([0, -20, 0]) machine_screw("M4", 3, z_plus = 1);
+
+
+
+// get hex nut
+function get_hexnut(name) =
+  // different nuts
+  let(nuts = [
+    // nut name; nut width (not the radius!); nut thickness
+    ["M3", 5.5, 2.4],
+    ["M4", 7, 3.2]
+  ])
+  nuts[search([name], nuts)[0]];
+
+
+// make a hexnut
+// @param name which hexnut
+// @param tolerance what tolerance to add (in mm) to the screw radius
+// @param stretch how much to stretch (in mm) the radius in the x direction (to account for collapse in vertical printing), added on top of the tolerance
+// @param z_plus how much thicker to make shape in z (for cutouts)
+module hexnut (name, tolerance = 0.025, stretch = 0, z_plus = 0, screw_hole = true) {
+  nut = get_hexnut(name);
+  nut_d = nut[1]/cos(180/6)+2*tolerance; // diameter
+  nut_h = nut[2]+2*z_plus; // thickness
+  translate([0, 0, -z_plus])
+    // apply stretch to whole shape
+    resize([nut_d+2*stretch, 0, 0])
+      difference() {
+        cylinder(h=nut_h, d=nut_d, center=false, $fn=6);
+        if (screw_hole) {
+          // generating screw hole with default tolerance
+          machine_screw(name, nut_h, z_plus = 0.1, countersink = false);
+        }
+      }
+}
+
+// examples
+color("yellow") translate([10, 0, 0]) hexnut("M3");
+color("green") translate([10, 10, 0]) hexnut("M3", z_plus = 0.15);
+color("purple") translate([10, 20, 0]) hexnut("M3", 5, tolerance = 0.5, stretch = 1);
+color("red") translate([10, -10, 0]) hexnut("M4");
+color("blue") translate([10, -20, 0]) hexnut("M4", screw_hole = false);

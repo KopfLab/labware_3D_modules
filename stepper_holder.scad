@@ -18,7 +18,7 @@ module nema17_holder(size) {
     for(x=[-1, 1])
       for(y=[-1, 1])
         translate([x*screws[1], y*screws[2], 0])
-          screw_hole(screws[0], size[2], tolerance = screws[3], z_plus = z_plus);
+          machine_screw(screws[0], size[2], tolerance = screws[3], z_plus = z_plus);
 
     // nema cut out
     translate([0, 0, -z_plus])

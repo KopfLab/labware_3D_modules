@@ -60,7 +60,7 @@ module LCD(type = "16x2", location = [0,0,0]) {
         for(x=[-1, 1])
           for(y=[-1, 1])
             translate([x*screws[1], y*screws[2], 0])
-              screw_hole(screws[0], lcd_size[2], tolerance = screws[3], z_plus = z_plus);
+              machine_screw(screws[0], lcd_size[2], tolerance = screws[3], z_plus = z_plus);
 
         // lcd cutout
         translate(lcd_offset)
