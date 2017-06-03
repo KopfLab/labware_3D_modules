@@ -1,3 +1,5 @@
+use <screws.scad>;
+
 // x/y but not z centered cube (regular center=true also centered z)
 module xy_center_cube (size) {
   translate([-size[0]/2, -size[1]/2, 0])
@@ -15,13 +17,13 @@ module LCD(type = "16x2", location = [0,0,0]) {
   }
 
   // parameters
-  xy_plus = 0.1; // how much thicker to make cutouts in xy
+  z_plus = 0.1; // how much thicker to make cutouts in z
 
   // different types of supported LCDs
   types = [
-    // name; lcd w, h; lcd thickness (-pcb); lcd center offset (relative to screws); screws x, y, d; screw socket diamter
-    ["16x2", [71.8, 24.8, 7], [0, -0.3, 0], [37.5, 15.5, 3.7], 6],
-    ["20x4", [80.5, 40.2, 7], [0, -0.3, 0], [37.5, 25.5, 3.7], 6] // FIXME exact
+    // name; lcd w, h, thickness (-pcb); lcd center offset (rel. to screws); screw type, x, y, tolerance; screw socket diamter
+    ["16x2", [71.8, 24.8, 7], [0, -0.3, 0], ["M3", 37.5, 15.5, 0.35], 6],
+    ["20x4", [80.5, 40.2, 7], [0, -0.3, 0], ["M3", 37.5, 25.5, 0.35], 6] // FIXME not exact
   ];
   type_idx = search([type], types)[0];
 
@@ -34,7 +36,7 @@ module LCD(type = "16x2", location = [0,0,0]) {
     %translate(location)
     {
       translate([0, 1, 0])
-      text("this way up", size = 5, valign = "bottom",
+      text("this way up + inside", size = 5, valign = "bottom",
         halign = "center");
       translate([0, -1, 0])
       text(str(type, " LCD"), size = 5, valign = "top",
@@ -54,7 +56,7 @@ module LCD(type = "16x2", location = [0,0,0]) {
           // screw sockets
           for(x=[-1, 1])
             for(y=[-1, 1])
-              translate([x*screws[0], y*screws[1], 0])
+              translate([x*screws[1], y*screws[2], 0])
                 cylinder(h=lcd_size[2], d=screw_socket_d, center = false, $fn=30);
         }
       }
@@ -62,18 +64,18 @@ module LCD(type = "16x2", location = [0,0,0]) {
         // screw holes
         for(x=[-1, 1])
           for(y=[-1, 1])
-            translate([x*screws[0], y*screws[1], -xy_plus])
-              cylinder(h=lcd_size[2] + 2*xy_plus, d=screws[2], center = false, $fn=30);
+            translate([x*screws[1], y*screws[2], 0])
+              screw_hole(screws[0], lcd_size[2], tolerance = screws[3], z_plus = z_plus);
+
         // lcd cutout
         translate(lcd_offset)
-          translate([0, 0, -xy_plus])
-          resize([0, 0, lcd_size[2] + 2*xy_plus])
+          translate([0, 0, -z_plus])
+          resize([0, 0, lcd_size[2] + 2*z_plus])
           xy_center_cube(lcd_size);
       }
     }
   }
 }
-
 
 
 // example
