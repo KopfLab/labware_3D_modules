@@ -1,3 +1,5 @@
+# About this repository
+
 This repository holds OpenSCAD modules for frequently used 3D printer parts. The modules should be written in such a way as to make it easy to incorporate them into larger designs for specific labware.
 
 # What is OpenSCAD?
@@ -9,9 +11,10 @@ This repository holds OpenSCAD modules for frequently used 3D printer parts. The
  - [OpenSCAD on GitHub](https://github.com/openscad/openscad/#what-is-openscad)
  - [OpenSCAD documentation](http://www.openscad.org/documentation.html)
  - [OpenSCAD cheat sheet](http://www.openscad.org/cheatsheet/index.html)
+ - [Using Atom/Emacs/etc. with OpenSCAD](https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_an_external_Editor_with_OpenSCAD)
 
-# Modules
+# Available Modules
 
 Quick descriptions of the modules in this repository and what they may be useful for:
 
-## Container
+ - LCD module: insert LCD holder into a surface
