@@ -1,10 +1,5 @@
+use <utils.scad>;
 use <screws.scad>;
-
-// x/y but not z centered cube (regular center=true also centered z)
-module xy_center_cube (size) {
-  translate([-size[0]/2, -size[1]/2, 0])
-  cube(size, center=false);
-}
 
 // lcd cutout and screw holes (made on the first child in the stack)
 // @param type which type of LCD, see types below for supported types
