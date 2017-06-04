@@ -18,3 +18,6 @@ This repository holds OpenSCAD modules for frequently used 3D printer parts. The
 Quick descriptions of the modules in this repository and what they may be useful for:
 
  - LCD module: insert LCD holder into a surface
+ - stepper holder module: generate NEMA stepper motor holders
+ - box: generate box for electronics with lid and container components
+ 
