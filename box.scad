@@ -9,7 +9,7 @@ use <screws.scad>;
 // @param wall thickness of box walls (in mm)
 // @param holders thickness (in mm) of holders for wall attachment
 // @param gap gap between the holders and the body walls (in mm) to avoid too tight
-module box_lid(size, thickness, wall = 4, holders = 4, gap = 0.4) {
+module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -119,7 +119,7 @@ module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1) 
 // examples (standard)
 size = [40, 40];
 translate([0, 70, 0]) {
-  color("green") box_lid(size, thickness = 4);
+  color("green") box_lid(size);
   translate([0, 0, 16]) color("red") box_body(size, length = 30);
   translate([0, 0, 64]) mirror([0, 0, 1]) color("blue") box_lid(size, thickness = 4);
 }
