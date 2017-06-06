@@ -17,8 +17,8 @@ module LCD(type = "16x2", location = [0,0,0]) {
   // different types of supported LCDs
   types = [
     // name; lcd w, h, thickness (-pcb); lcd center offset (rel. to screws); screw type, x, y, tolerance; screw socket diamter
-    ["16x2", [71.8, 24.8, 7], [0, -0.3, 0], ["M3", 37.5, 15.5, 0.35], 6],
-    ["20x4", [80.5, 40.2, 7], [0, -0.3, 0], ["M3", 37.5, 25.5, 0.35], 6] // FIXME not exact
+    ["16x2", [71.5, 24.5, 7.0], [0, -0.8, 0], ["M3", 37.5, 15.5, 0.35], 6],
+    ["20x4", [97.5, 40.3, 9.5], [0,  0.0, 0], ["M3", 46.5, 27.6, 0.35], 6] // FIXME not exact
   ];
   type_idx = search([type], types)[0];
 
@@ -77,4 +77,4 @@ module LCD(type = "16x2", location = [0,0,0]) {
 color("red")
 LCD(type = "16x2", location = [0, 35, 0])
 LCD(type = "20x4", location = [0, -30, 0])
-xy_center_cube([100, 140, 4]);
+xy_center_cube_with_feet([110, 140, 4], feet = 3);
