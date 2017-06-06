@@ -9,7 +9,9 @@ use <screws.scad>;
 // @param wall thickness of box walls (in mm)
 // @param holders thickness (in mm) of holders for wall attachment
 // @param gap gap between the holders and the body walls (in mm) to avoid too tight
-module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4) {
+// @param feet how many feet to include
+// @param feet_params = [foot_height, tolerance, stackable]
+module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, feet_params = [5, 0.3, true]) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -34,7 +36,8 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4) {
   difference() {
     union() {
       // base
-      xy_center_cube([size[0], size[1], thickness]);
+      xy_center_cube_with_feet([size[0], size[1], thickness], feet = feet,
+        foot_height = feet_params[0], tolerance = feet_params[1], stackable = feet_params[2]);
 
       // holders
       for(x=[-1, 1])
@@ -126,5 +129,5 @@ translate([0, 70, 0]) {
 
 // customized
 size2 = [120, 60];
-color("green") box_lid(size2, thickness = 10, wall = 8, holders = 6, gap = 1);
+color("green") box_lid(size2, thickness = 10, wall = 8, holders = 6, gap = 1, feet = 4, feet_params = [6, 0.5, false]);
 translate([0, -70, 0]) color("red") box_body(size2, length = 50, wall = 8, holders = 6, vents = 7, vent_width = 1.5);
