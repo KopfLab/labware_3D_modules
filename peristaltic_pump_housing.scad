@@ -25,7 +25,10 @@ module wm_stepper_pump(location = [0, 0, 0], show_pump = false) {
       // stepper motor cutout (centered)
       translate([0, 0, -z_plus])
         rotate([0, 0, 45])
-            xy_center_cube([42+2*tolerance, 42+2*tolerance, 48+2*z_plus]);
+          union() {
+            xy_center_cube([42.4+2*tolerance, 42.4+2*tolerance, 48+2*z_plus]);
+            translate([0, -42.5/2, 0]) xy_center_cube([9, 9, 48+2*z_plus]); //
+          }
     }
   }
 
@@ -46,6 +49,6 @@ module wm_stepper_pump(location = [0, 0, 0], show_pump = false) {
 
 
 color("green")
-  wm_stepper_pump(location = [0, -35, 0])
+  wm_stepper_pump(location = [0, -35, 0], show_pump=false)
   LCD(type = "20x4", location = [0, 38, 0])
   box_lid([120, 160], thickness = 5, feet = 2);
