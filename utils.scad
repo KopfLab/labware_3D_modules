@@ -1,4 +1,5 @@
 // common convenience functions and modules
+use <screws.scad>;
 
 // x/y but not z centered cube (regular center=true also centered z)
 module xy_center_cube (size) {
@@ -48,3 +49,47 @@ translate([0, 40, 0])
 translate([0, -40, 0])
   color("red")
     xy_center_cube_with_feet([80, 20, 4], feet = 5, foot_height = 6, stackable = false);
+
+
+// standard attachment for a rectangular module affixed on top of a board
+// @param thickness how thick base board is
+// @param screws array of screw parameters (type, location x, location y, tolerance)
+// @param block array of cube parameters (length, width, offset from base board, thickness)
+// @param location central point of the cutout
+// @param rotation how much to rotate
+// @param show whether to show cube (not intended for printing)
+module block_attachment (thickness, screws, block, location = [0,0,0], rotation = [0,0,0], show = false) {
+  // parameters
+  z_plus = 0.1; // how much thicker to make cutouts in z
+
+  difference() {
+    union() {
+      children(0);
+      if (show) {
+        // cube outline (not printed)
+        translate(location) rotate(rotation)
+          translate([0, 0, thickness+block[2]])
+            #xy_center_cube([block[0], block[1], block[3]]);
+      }
+    }
+
+    translate(location)
+      rotate(rotation) {
+        // screw holes
+        for(x=[-1, 1])
+          for(y=[-1, 1])
+            translate([x*screws[1], y*screws[2], 0])
+              machine_screw(screws[0], thickness+block[0]+block[1], tolerance = screws[3], z_plus = z_plus);
+      }
+  }
+}
+
+translate([80, 30, 0])
+  color("blue")
+    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 5, 10], show = true)
+      xy_center_cube([60, 30, 10]);
+
+translate([80, -30, 0])
+  color("blue")
+    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 5, 10], show = false)
+      xy_center_cube([60, 30, 10]);
