@@ -54,7 +54,7 @@ translate([0, -40, 0])
 // standard attachment for a rectangular module affixed on top of a board
 // @param thickness how thick base board is
 // @param screws array of screw parameters (type, location x, location y, tolerance)
-// @param block array of cube parameters (length, width, offset from base board, thickness)
+// @param block array of cube parameters (length, width, thickness, offset from base board)
 // @param location central point of the cutout
 // @param rotation how much to rotate
 // @param show whether to show cube (not intended for printing)
@@ -68,8 +68,8 @@ module block_attachment (thickness, screws, block, location = [0,0,0], rotation 
       if (show) {
         // cube outline (not printed)
         translate(location) rotate(rotation)
-          translate([0, 0, thickness+block[2]])
-            #xy_center_cube([block[0], block[1], block[3]]);
+          translate([0, 0, thickness+block[3]])
+            #xy_center_cube([block[0], block[1], block[2]]);
       }
     }
 
@@ -86,10 +86,10 @@ module block_attachment (thickness, screws, block, location = [0,0,0], rotation 
 
 translate([80, 30, 0])
   color("blue")
-    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 5, 10], show = true)
+    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 10, 5], show = true)
       xy_center_cube([60, 30, 10]);
 
 translate([80, -30, 0])
   color("blue")
-    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 5, 10], show = false)
+    block_attachment(10, ["M3", 15, 5, 0.2], [40, 20, 10, 5], show = false)
       xy_center_cube([60, 30, 10]);
