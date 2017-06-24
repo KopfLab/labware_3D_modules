@@ -47,8 +47,20 @@ module wm_stepper_pump(location = [0, 0, 0], show_pump = false) {
 }
 
 
+// make pump housing front
+module peristaltic_pump_front(show_pump = false) {
+  color("green")
+    wm_stepper_pump(location = [0, -35, 0], show_pump=show_pump)
+    LCD(type = "20x4", location = [0, 38, 0])
+    box_lid([120, 160], thickness = 5, feet = 2);
+}
 
-color("green")
-  wm_stepper_pump(location = [0, -35, 0], show_pump=false)
-  LCD(type = "20x4", location = [0, 38, 0])
-  box_lid([120, 160], thickness = 5, feet = 2);
+// make pump housing body
+module peristaltic_pump_body() {
+  color("red")
+    box_body([120, 160], length = 100, vent_width = 3);
+}
+
+
+!translate([-150, 0, 0]) peristaltic_pump_front();
+peristaltic_pump_body();
