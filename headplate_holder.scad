@@ -1,53 +1,62 @@
 use <utils.scad>;
 
 // make headplate holder
-// @param height the height of the holder
-// @param stubs the height of the stubs (on top of the holder)
-module headplate_holder(height = 110, stubs = 15) {
+// @param holder_height the height of the holder
+// @param rim_height the height of the rim on top of the holder
+module headplate_holder(holder_height = 120, rim_height = 10) {
 
-  holder_d = 195; // holder diameter (190 is actual headplate)
-  hole_d = 150; // hole diameter (143 is actual to sealing ring)
-  base_h = 15; // base height
+  // general settings
   z_plus = 0.1; // how much thicker to make cutouts in z
-  stub_r = 85; // location of the stubs
-  stub_d = 6.5; // diameter of the stubs
-  stub_tolerance = 0.3; // tolerance on the stub holes
-  cutout_w = 75; // width of the cutout
-  cutout_d = holder_d - hole_d; // depth of the cutout
+
+  // holder
+  holder_d = 192; // holder diameter (190 is actual headplate)
+  holder_thickness = 15; // holder chickness
+  base_h = 12; // base height
+
+  // holder rim
+  rim_thickness = 7.5; // thickness of the rim
+  rim_cutout_tolerance = 1; // extra thickness on cutout to ensure stackability
+
+  // side cutout
+  cutout_x = 85; // x location of cutouts
+  cutout_w = 85; // width of the cutout
   cutout_w_d_scale = 1; // how much the angled support of the pillars are squashed
 
   difference() {
 
     union() {
       // cylinder itself
-      cylinder(h=height, d=holder_d, $fn = 120);
-      // make adapters
-      for (r = [0:5])
-        rotate(r*60)
-          translate([stub_r, 0, 0])
-            cylinder(h=height+stubs, d=stub_d, $fn=30);
+      cylinder(h=holder_height, d=holder_d, $fn = 120);
+
+      // rims
+      difference() {
+        cylinder(h=holder_height+rim_height, d=holder_d+2*rim_thickness, $fn = 120);
+        // side cut outs
+        for (r = [0:5])
+          rotate(36+r*72)
+            translate([cutout_x, 0, -z_plus])
+              xy_center_cube([holder_d, cutout_w, holder_height+rim_height+2*z_plus]);
+        // top cutout
+        translate([0, 0, holder_height])
+          cylinder(h=rim_height+z_plus, d=holder_d+rim_cutout_tolerance, $fn=120);
+      }
     }
 
-    translate([0, 0, -z_plus]) {
-      // central hole cut
-      cylinder(h=height+2*z_plus, d=hole_d, $fn=120);
-      // adapter holes for stacking
-      for (r = [0:5])
-        rotate(30+r*60)
-          translate([stub_r, 0, 0])
-            cylinder(h=height+2*z_plus, d=stub_d+stub_tolerance, $fn=30);
-    }
+    // center hole cutout
+    translate([0, 0, -z_plus])
+      cylinder(h=holder_height+2*z_plus, d=holder_d - 2*holder_thickness, $fn=120);
+
 
     // side walls cutout
-    for (r = [0:5]) color("green")
-      rotate(30+r*60)
-        translate([stub_r, 0, base_h+cutout_w_d_scale*cutout_w/2])
+    for (r = [0:5])
+      rotate(36+r*72)
+        translate([cutout_x, 0, base_h+cutout_w_d_scale*cutout_w/2])
           union() {
-            xy_center_cube([cutout_d, cutout_w, height]);
-            translate([-cutout_d/2, 0, 0])
+            xy_center_cube([holder_d, cutout_w, holder_height]);
+            translate([-holder_d/2, 0, 0])
               rotate([0,90,0])
                 scale([cutout_w_d_scale, 1.0, 1.0])
-                  cylinder(d=cutout_w, h=cutout_d);
+                  cylinder(d=cutout_w, h=holder_d);
           }
   }
 
