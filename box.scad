@@ -35,7 +35,7 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
   // assembly
   difference() {
     union() {
-      // base
+      // base with feet
       xy_center_cube_with_feet([size[0], size[1], thickness], feet = feet,
         foot_height = feet_params[0], tolerance = feet_params[1], stackable = feet_params[2]);
 

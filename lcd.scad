@@ -31,10 +31,10 @@ module LCD(type = "16x2", location = [0,0,0]) {
     %translate(location)
     {
       translate([0, 1, 0])
-      text("this way up + inside", size = 5, valign = "bottom",
+      #text("this way up + inside", size = 5, valign = "bottom",
         halign = "center");
       translate([0, -1, 0])
-      text(str(type, " LCD"), size = 5, valign = "top",
+      #text(str(type, " LCD"), size = 5, valign = "top",
         halign = "center");
     }
 
