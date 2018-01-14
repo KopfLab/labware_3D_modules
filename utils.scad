@@ -18,6 +18,7 @@ module xy_center_cube_with_feet (size, feet = 2, foot_height = 5, tolerance = 0.
   foot_d = foot_height/cos(180/6);
   foot_list = [for (i = [1 : 1 : feet]) i];
   foot_spacing = size[0]/(2*feet);
+  foot_width = size[2]/sqrt(3); // width of bottom foot size
   difference() {
     union() {
       translate([-size[0]/2, -size[1]/2, 0])
@@ -27,7 +28,12 @@ module xy_center_cube_with_feet (size, feet = 2, foot_height = 5, tolerance = 0.
       for(i = foot_list)
         translate([-size[0]/2 + (2*i - 1) * foot_spacing, - size[1]/2, 0])
           rotate([0, 0, 0])
-            cylinder(h=size[2] - tolerance, d=foot_d, $fn=6, center = false);
+            union() {
+              translate([-foot_width/2, 0, 0])
+              cylinder(h=size[2] - tolerance, d=foot_d, $fn=6, center = false);
+              translate([+foot_width/2, 0, 0])
+              cylinder(h=size[2] - tolerance, d=foot_d, $fn=6, center = false);
+            }
     }
     if (stackable) {
       // add feet cutout
@@ -35,7 +41,12 @@ module xy_center_cube_with_feet (size, feet = 2, foot_height = 5, tolerance = 0.
       for(i = foot_list)
         translate([-size[0]/2 + (2*i - 1) * foot_spacing, + size[1]/2, -z_plus])
           rotate([0, 0, 0])
-            cylinder(h=size[2]+2*z_plus, d=foot_d+tolerance, $fn=6, center = false);
+            union() {
+              translate([-foot_width/2, 0, 0])
+              cylinder(h=size[2]+2*z_plus, d=foot_d+tolerance, $fn=6, center = false);
+              translate([+foot_width/2, 0, 0])
+              cylinder(h=size[2]+2*z_plus, d=foot_d+tolerance, $fn=6, center = false);
+            }
     }
   }
 }
