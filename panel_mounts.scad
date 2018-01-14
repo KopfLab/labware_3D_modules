@@ -47,6 +47,7 @@ module show_block (block, location, rotation, show = false) {
 // ATTACHMENTS //
 
 // standard particle photon holder board cutout
+// NOTE: the power part does not behave well with rotations
 module photon_board(thickness, location = [0,0,0], rotation = [0,0,0], show = false) {
   screws = ["M3", 28, 16.5, 0.2];
   board = [64, 40, 1.6, 6.35];
@@ -114,7 +115,6 @@ relay_sink(thickness = 5, show = true) xy_center_cube([120, 100, 5]);
 // @param block dimensions of snap in cutout (length, width, thickness)
 // @param face dimensions of the face block  (length, width, thickness)
 // @param clips dimensions of the gaps for clips (location x, location y, length, width, thickness)
-// @param screws array of screw parameters (type, location x, location y, tolerance)
 // @param location central point of the cutout
 // @param rotation how much to rotate
 // @param show whether to show cube (not intended for printing)
@@ -138,6 +138,35 @@ module panel_snap_in (thickness, cutout, face, clips, location = [0,0,0], rotati
   }
 }
 
+// standard screw in for a panel
+// @param thickness how thick base board is
+// @param block dimensions of snap in cutout (length, width, thickness)
+// @param face dimensions of the face block  (length, width, thickness)
+// @param screws array of screw parameters (type, location x, location y, tolerance)
+// @param location central point of the cutout
+// @param rotation how much to rotate
+// @param show whether to show cube (not intended for printing)
+// @param tolerance how much tolerance to add to the snap in cutout
+module panel_screw_in (thickness, cutout, face, screws, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
+  z_plus = 0.1; // how much thicker to make cutouts in z
+  difference() {
+    show_block (face, location - [0, 0, face[2]], rotation, show)
+    show_block (cutout + [2*tolerance, 2*tolerance, 0], location, rotation, show)
+    children(0);
+
+    translate(location) rotate(rotation) {
+      translate([0, 0, -z_plus])
+        xy_center_cube([cutout[0], cutout[1], cutout[2]+2*z_plus]);
+
+        // screw holes
+        for(x=[-1, 1])
+          for(y=[-1, 1])
+            translate([x*screws[1], y*screws[2], -face[2]])
+              machine_screw(screws[0], thickness+face[2], countersink = false, tolerance = screws[3], z_plus = z_plus);
+    };
+  }
+}
+
 // schurter AC power module with fuse and scwitch (rated for 10A)
 // https://www.digikey.com/products/en?keywords=%09486-1965-ND
 module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
@@ -146,6 +175,38 @@ module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, 
   clips = [42.5/2, 27.8/2, 4, 3, 2];
   clips = [42.5/2, cutout[1]/2 + 1.3, 4.5, 3.2, 2];
   panel_snap_in(thickness, cutout, face, clips, location, rotation, show, tolerance)
+  children(0);
+}
+
+
+// NULSOM DB9 RS232 serial port
+// cutoff such that connector can be vertically flipped (i.e. 5 pins up or 4 pins up)
+// https://www.amazon.com/Ultra-Compact-RS232-Converter-Male/dp/B00OPU2QJ4
+module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
+  cutout = [19.25, 10.9, 18.35];
+  face = [30.85, 12.55, 5.43];
+  screws = ["M3", 12.45, 0, 0.3];
+  panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
+  children(0);
+}
+
+// Adafruit MicroUSB Port
+// https://www.adafruit.com/product/3258
+module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
+  cutout = [12.5, 10.0, 20.0]; // could use some refinement
+  face = [25.0, 10.0, 5.43]; // could use some refienement
+  screws = ["4-40", 9, 0, 0.3];
+  panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
+  children(0);
+}
+
+// Adafruit RJ45/Ethernet port
+// https://www.adafruit.com/product/909
+module RJ45_port (thickness, location = [0,0,0], rotation = [0,0,0], show = false, tolerance = 0.15) {
+  cutout = [20, 20, 28.0]; // could use some refinement
+  face = [33.0, 20.0, 4]; // could use some refinement
+  screws = ["4-40", 12.5, 0, 0.3];
+  panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
   children(0);
 }
 
