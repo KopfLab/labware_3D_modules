@@ -178,6 +178,16 @@ module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, 
   children(0);
 }
 
+// power module
+color("blue") AC_power(thickness = 5, show = true) xy_center_cube([120, 80, 5]);
+
+module AC_outlet (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
+  cutout = [25.0, 21.55, 24.75];
+  face = [26.87, 26.95, 3.56];
+  clips = [cutout[0]/2 + 2.9/2, 0, 3, 9.8, 2];
+  panel_snap_in(thickness, cutout, face, clips, location, rotation, show, tolerance)
+  children(0);
+}
 
 // NULSOM DB9 RS232 serial port
 // cutoff such that connector can be vertically flipped (i.e. 5 pins up or 4 pins up)
@@ -193,7 +203,7 @@ module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = 
 // Adafruit MicroUSB Port
 // https://www.adafruit.com/product/3258
 module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [12.5, 10.0, 20.0]; // could use some refinement
+  cutout = [12.0, 10.0, 20.0];
   face = [25.0, 10.0, 5.43]; // could use some refienement
   screws = ["4-40", 9, 0, 0.3];
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
@@ -209,6 +219,3 @@ module RJ45_port (thickness, location = [0,0,0], rotation = [0,0,0], show = fals
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
   children(0);
 }
-
-// power module
-color("blue") AC_power(thickness = 5, show = true) xy_center_cube([120, 80, 5]);
