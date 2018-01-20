@@ -193,7 +193,7 @@ module AC_outlet (thickness, location = [0,0,0], rotation=[0,0,0], show = false,
 // cutoff such that connector can be vertically flipped (i.e. 5 pins up or 4 pins up)
 // https://www.amazon.com/Ultra-Compact-RS232-Converter-Male/dp/B00OPU2QJ4
 module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [19.25, 10.9, 18.35];
+  cutout = [19.35, 10.95, 18.35];
   face = [30.85, 12.55, 5.43];
   screws = ["M3", 12.45, 0, 0.3];
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
