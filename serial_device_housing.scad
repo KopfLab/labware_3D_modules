@@ -7,7 +7,7 @@ thickness = 5;
 size = [120, 80];
 
 // back panel
-!color("gray")
+color("gray")
 photon_board(thickness = thickness, location = [-18, 10, 0], rotation = [0, 0, 0], show = show)
 DB9_serial_port(thickness = thickness, location = [0, -21, 0], show = show)
 MicroUSB_port(thickness = thickness, location = [31, -21, 0], show = show)
@@ -17,7 +17,7 @@ box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 // body
 translate([0, 0, 30])
 color("green")
-box_body(size, length = 80);
+box_body(size, length = 80, vent_width = 3);
 
 // front panel
 translate([0, 0, 140])
