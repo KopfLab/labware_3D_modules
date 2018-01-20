@@ -203,8 +203,8 @@ module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = 
 // Adafruit MicroUSB Port
 // https://www.adafruit.com/product/3258
 module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [12.0, 10.0, 20.0];
-  face = [25.0, 10.0, 5.43]; // could use some refienement
+  cutout = [11.0, 8.0, 22.0];
+  face = [25.0, 10.0, 5.43]; 
   screws = ["4-40", 9, 0, 0.3];
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
   children(0);
