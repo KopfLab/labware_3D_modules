@@ -28,7 +28,7 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
   holder_x = [
     holders + 10, // extra space for screw location
     holders,
-    10 // height
+    12 // height
   ];
   holder_y = [holder_x[1], holder_x[0], holder_x[2]];
 
