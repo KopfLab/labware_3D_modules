@@ -170,10 +170,10 @@ module panel_screw_in (thickness, cutout, face, screws, location = [0,0,0], rota
 // schurter AC power module with fuse and scwitch (rated for 10A)
 // https://www.digikey.com/products/en?keywords=%09486-1965-ND
 module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [46.8, 27.8, 30.35];
+  cutout = [46.9, 27.9, 30.35];
   face = [50, 30.5, 2.5];
   clips = [42.5/2, 27.8/2, 4, 3, 2];
-  clips = [42.5/2, cutout[1]/2 + 1.3, 4.5, 3.2, 2];
+  clips = [42.5/2, cutout[1]/2 + 1.3, 4.5, 3.2, 3.5];
   panel_snap_in(thickness, cutout, face, clips, location, rotation, show, tolerance)
   children(0);
 }
@@ -182,9 +182,9 @@ module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, 
 color("blue") AC_power(thickness = 5, show = true) xy_center_cube([120, 80, 5]);
 
 module AC_outlet (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [25.0, 21.55, 24.75];
+  cutout = [25.1, 21.65, 24.75];
   face = [26.87, 26.95, 3.56];
-  clips = [cutout[0]/2 + 2.9/2, 0, 3, 9.8, 2];
+  clips = [cutout[0]/2 + 2.9/2, 0, 3, 9.8, 3.5];
   panel_snap_in(thickness, cutout, face, clips, location, rotation, show, tolerance)
   children(0);
 }
@@ -193,7 +193,7 @@ module AC_outlet (thickness, location = [0,0,0], rotation=[0,0,0], show = false,
 // cutoff such that connector can be vertically flipped (i.e. 5 pins up or 4 pins up)
 // https://www.amazon.com/Ultra-Compact-RS232-Converter-Male/dp/B00OPU2QJ4
 module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
-  cutout = [19.35, 10.95, 18.35];
+  cutout = [19.45, 11.0, 18.35];
   face = [30.85, 12.55, 5.43];
   screws = ["M3", 12.45, 0, 0.3];
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
