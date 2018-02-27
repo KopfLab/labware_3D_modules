@@ -5,7 +5,8 @@ function get_screw(name) =
     // screw name; screw diameter; countersink parameter (head diameter, head depth)
     ["M3", 3, [6, 4.5]],
     ["4-40", 2.9, [5.3, 4.5]],
-    ["M4", 4, [8, 5.5]] // NOTE: dimensions not confirmed
+    ["M4", 4, [8, 5.5]], // NOTE: counter sink dimensions not confirmed
+    ["M5", 5, [10, 6.5]] // NOTE: counter sink dimensions not confirmed
   ])
   screws[search([name], screws)[0]];
 
@@ -53,7 +54,8 @@ function get_hexnut(name) =
   let(nuts = [
     // nut name; nut width (not the radius!); nut thickness
     ["M3", 5.5, 2.4],
-    ["M4", 7, 3.2]
+    ["M4", 7, 3.2],
+    ["M5", 8, 4]
   ])
   nuts[search([name], nuts)[0]];
 
