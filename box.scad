@@ -74,7 +74,8 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
 // @param holders thickness (in mm) of holders for wall attachment
 // @param vents number of vents
 // @param vent_width the width of each vent (in mm)
-module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1) {
+// @param vents_both_sides whether vents on both or only one side
+module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, vents_both_sides = true) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -92,6 +93,9 @@ module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1) 
     vent_width,
     length - 2*screw_loc[2] - 2*7 // vent gap from top and bottom
   ];
+
+  // ventilation location
+  ventilation_location = vents_both_sides ? [0, 0, 0] : [-wall-z_plus, 0, 0];
 
   // assembly
   difference() {
@@ -113,8 +117,9 @@ module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1) 
     total_vent_space = size[1] - 2 * wall - 2 * vent_width;
     vent_spacing = total_vent_space/(vents + 1);
     for(y = vent_list)
-      translate([0, -total_vent_space/2 + y*vent_spacing, (length - ventilation_strip[2])/2])
-        xy_center_cube(ventilation_strip);
+      translate(ventilation_location)
+        translate([0, -total_vent_space/2 + y*vent_spacing, (length - ventilation_strip[2])/2])
+          xy_center_cube(ventilation_strip);
   }
 
 }
