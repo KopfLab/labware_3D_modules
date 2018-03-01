@@ -239,12 +239,18 @@ module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = 
 // Adafruit MicroUSB Port
 // https://www.adafruit.com/product/3258
 // Note: could consider making the outside of these screws countersunk
-module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
+// @param port_only whether to include the cable port only (otherwise the whole panel mount adapter withs crews)
+module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], port_only = false, show = false, tolerance = 0.15) {
   cutout = [11.0, 8.0, 22.0];
   face = [25.0, 10.0, 5.43];
   screws = ["4-40", 9, 0, 0.3];
-  panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
-  children(0);
+  if (!port_only) {
+    panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
+    children(0);
+  } else {
+    panel_cut_out(thickness, cutout, location, rotation, show, tolerance)
+    children(0);
+  }
 }
 
 // Adafruit RJ45/Ethernet port
