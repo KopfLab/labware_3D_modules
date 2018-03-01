@@ -11,7 +11,6 @@ color("gray")
 photon_board(thickness = thickness, location = [-18, 10, 0], with_RJ45 = true, show = show)
 DB9_serial_port(thickness = thickness, location = [0, -21, 0], show = show)
 MicroUSB_port(thickness = thickness, location = [31, -21, 0], show = show)
-//RJ45_port(thickness = thickness, location = [-35, -21, 0], show = show)
 box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 
 // body
