@@ -248,7 +248,8 @@ module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], port_only
     panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
     children(0);
   } else {
-    panel_cut_out(thickness, cutout, location, rotation, show, tolerance)
+    // for port only, make tolerance a little bigger (2mm increase)
+    panel_cut_out(thickness, cutout + [2, 2, 0], location, rotation, show, tolerance)
     children(0);
   }
 }
