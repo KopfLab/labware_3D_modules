@@ -4,7 +4,7 @@ use <panel_mounts.scad>;
 
 show = true;
 thickness = 5;
-size = [120, 80];
+size = [120, 80, 80];
 
 // back panel
 color("gray")
@@ -16,7 +16,7 @@ box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 // body
 translate([0, 0, 30])
 color("green")
-box_body(size, length = 80, vent_width = 3);
+box_body(size, length = size[2], vent_width = 3);
 
 // front panel
 translate([0, 0, 140])
