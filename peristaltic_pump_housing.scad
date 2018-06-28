@@ -65,5 +65,5 @@ module peristaltic_pump_body(size) {
 show = true;
 size = [120, 140, 80];
 
-!peristaltic_pump_front(size, show);
+peristaltic_pump_front(size, show);
 translate([0, 0, 30]) peristaltic_pump_body(size);
