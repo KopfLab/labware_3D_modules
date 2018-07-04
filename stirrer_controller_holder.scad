@@ -8,23 +8,37 @@ module stirrer_controller_holder() {
   rod_diameter = 15;
   rod_height = 80;
   base = [100, rod_diameter, 25.4];
-  support_height = 20;
-  supports = [2*support_height/sqrt(2), rod_diameter, 2*support_height/sqrt(2)];
+  stop = [rod_diameter + 20, rod_diameter + 10, 10];
+  right_support_height = 30;
+  left_support_height = base[0]/2;
   screw_head_diameter = 12;
   attachment_thickness = 6.35;
 
   difference() {
     union() {
-      cylinder(h=rod_height + base[2] + support_height, d=rod_diameter, $fn = 120);
-      //translate([0, 0, base[2]]) cylinder(h=support_height, d1=base[1], d2 = rod_diameter, $fn = 120);
-      translate([0, 0, base[2]]) xy_center_cube([rod_diameter, rod_diameter, support_height]);
-      for(x=[-1, 1])
-        translate([x*supports[0]/4, 0, base[2]-support_height/2])
-          translate([-support_height/2, 0, 0])
-            rotate([0, 45, 0])
-              xy_center_cube(supports);
+      cylinder(h=rod_height + base[2] + right_support_height, d=rod_diameter, $fn = 120);
+      // right suport
+      translate([-right_support_height/2, 0, base[2]-right_support_height/2])
+        rotate([0, 45, 0])
+          xy_center_cube([2*right_support_height/sqrt(2), rod_diameter, 2*right_support_height/sqrt(2)]);
+      // left suport
+      difference() {
+        translate([-left_support_height/2, 0, base[2]-left_support_height/2])
+          rotate([0, 45, 0])
+            xy_center_cube([sqrt(2)*left_support_height, rod_diameter, sqrt(2)*left_support_height]);
+        translate([left_support_height/2, 0, 0])
+          xy_center_cube([left_support_height, rod_diameter+0.01, 2*left_support_height]);
+      }
+      // base
       xy_center_cube(base);
+      // top of rod
+      translate([0, rod_diameter/2 - stop[1]/2, rod_height + base[2] + right_support_height])
+        xy_center_cube(stop);
     };
+
+    // shave off bottom
+    translate([0, 0, -base[2] - left_support_height/2 + 0.5])
+      xy_center_cube([base[0]+0.01, rod_diameter+0.01, left_support_height]);
 
     for(x=[-1, 1])
       translate([x*base[0]/3, rod_diameter/2-attachment_thickness, base[2]/2])
