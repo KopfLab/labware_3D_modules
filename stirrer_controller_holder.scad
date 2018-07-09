@@ -8,7 +8,7 @@ module stirrer_controller_holder() {
   rod_diameter = 15;
   rod_height = 80;
   base = [100, rod_diameter, 25.4];
-  stop = [rod_diameter + 20, rod_diameter + 10, 10];
+  stop = [rod_diameter + 10, rod_diameter + 5, 10];
   right_support_height = 30;
   left_support_height = base[0]/2;
   screw_head_diameter = 12;
@@ -32,7 +32,7 @@ module stirrer_controller_holder() {
       // base
       xy_center_cube(base);
       // top of rod
-      translate([0, rod_diameter/2 - stop[1]/2, rod_height + base[2] + right_support_height])
+      translate([0, rod_diameter/2 - stop[1]/2, rod_height + base[2] + right_support_height - stop[2]])
         xy_center_cube(stop);
     };
 
