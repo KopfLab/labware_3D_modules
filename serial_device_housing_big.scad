@@ -3,7 +3,7 @@ use <lcd.scad>;
 use <panel_mounts.scad>;
 
 show = true;
-thickness = 5;
+thickness = 4;
 size = [120, 80, 80];
 
 // back panel
