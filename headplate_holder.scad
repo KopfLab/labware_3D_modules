@@ -3,7 +3,7 @@ use <utils.scad>;
 // make headplate holder
 // @param holder_height the height of the holder
 // @param rim_height the height of the rim on top of the holder
-module headplate_holder(holder_height = 120, rim_height = 10) {
+module headplate_holder(holder_height = 125, rim_height = 10) {
 
   // general settings
   z_plus = 0.1; // how much thicker to make cutouts in z
