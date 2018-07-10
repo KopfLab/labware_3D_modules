@@ -264,3 +264,20 @@ module RJ45_port (thickness, location = [0,0,0], rotation = [0,0,0], show = fals
   panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
   children(0);
 }
+
+// Power Barrel Connector Jack 2.00mm ID (0.079"), 5.50mm OD (0.217") Panel Mount
+// https://www.digikey.com/products/en?keywords=CP-065A-ND
+module power_jack(thickness, location = [0,0,0], rotation = [0,0,0], show = false) {
+
+  z_plus = 0.1; // how much thicker to make cutouts in z
+  plug_diameter = 8.1;
+  plug_face = [11, 11, 15];
+
+  difference() {
+    show_block(plug_face, location + [0, 0, thickness], rotation, show = show)
+    children(0);
+    translate(location + [0,0,-z_plus])
+      rotate(rotation)
+        cylinder(h=thickness+2*z_plus, d=plug_diameter, $fn = 120);
+  }
+}
