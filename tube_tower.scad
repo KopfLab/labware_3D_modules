@@ -44,7 +44,7 @@ module tube_tower(rows = 8, supports = true) {
         translate([x * (tube_diameter + tube_spacing), 0, base_height + (y-0.5) * (tube_diameter + tube_stretch + tube_spacing) + tube_spacing/2])
           resize([0, 0, tube_diameter + tube_stretch])
             rotate([90, 0, 0])
-              cylinder(d = tube_diameter, h = base[1] + z_plus, center=true, $fn = 120);
+              cylinder(d = tube_diameter, h = base[1] + z_plus, center=true, $fn = 60);
     // front cut
     translate([0, (base_area[1] - front_cut[1])/2 + z_plus, base_height])
       xy_center_cube(front_cut);
@@ -67,7 +67,7 @@ module tube_tower(rows = 8, supports = true) {
                     xy_center_cube(support);
                     translate([0, -x * support_height/2, support_height/2 - y * support_height/2])
                       rotate([0, 90, 0])
-                        cylinder(d = 2 * support_height, h = support[0] + z_plus, center=true, $fn = 120);
+                        cylinder(d = 2 * support_height, h = support[0] + z_plus, center=true, $fn = 30);
                   }
           }
         }
