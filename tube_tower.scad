@@ -4,27 +4,29 @@ use <screws.scad>;
 
 // generate a tube tower
 // @param rows how many rows of tubes (default is 8 for a 40 tube tower)- determines tower height
-// @param base_height thickness of the base (need the right length screws to work)
+// @param base_height thickness of the base (adjust for length of screws)
+// @param screw_distance x/y displacement of platform screws (depends on platform)
 // @param supports whether to print supports (required for stability of tall towers)
-module tube_tower(rows = 8, base_height = 10, supports = true) {
+module tube_tower(rows = 8, base_height = 10, screw_distance = [29.2, 29.2], supports = true) {
 
   // parameters
-  base_area = [150, 150];
-  wall_width = 12; // width of the walls
+  tower_depth = 120;
+  wall_width = 10; // width of the walls
   tube_head_gap = 9; // how big a gap for the tube heads
-  tube_spacing = 6; // how much space between each tube hole
+  tube_spacing = 4; // how much space between each tube hole
   tube_diameter = 18.2; // diameter of the tubes
-  tube_stretch = 2; // how much to stretch in vertical direction to account for printing collapse
+  tube_stretch = 1; // how much to stretch in vertical direction to account for printing collapse
+  cover_width = 153.5; // 6" width with a little buffer
   cover_thickness = 3.5; // thickness of the acryl cover
   cover_rail_depth = 5; // depth of the cover rails
-  cover_wall = 6; // wall in front of the cover
-  screw_distance = [25.4, 25.4]; // x/y displacement of platform screws
+  cover_wall = 5; // wall in front of the cover
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
   hexnut_plus = 0.1; // allow a little extra space for hexnuts
 
   // derived quantities and shapes
+  base_area = [cover_width + 2 * wall_width - 2 * cover_rail_depth, tower_depth];
   tower_height = rows * (tube_diameter + tube_stretch + tube_spacing) + tube_spacing;
   base = [base_area[0], base_area[1], base_height + tower_height];
   front_cut = [base_area[0] - 2 * wall_width, tube_head_gap + cover_thickness + cover_wall + z_plus, tower_height + z_plus];
@@ -45,7 +47,7 @@ module tube_tower(rows = 8, base_height = 10, supports = true) {
     // tubes cuts
     row_list = [for (i = [1 : 1 : rows]) i];
     for(y = row_list)
-      for (x=[-2, -1, 0, 1, 2])
+      for (x=[-2.5, -1.5, -0.5, 0.5, 1.5, 2.5])
         translate([x * (tube_diameter + tube_spacing), 0, base_height + (y-0.5) * (tube_diameter + tube_stretch + tube_spacing) + tube_spacing/2])
           resize([0, 0, tube_diameter + tube_stretch])
             rotate([90, 0, 0])
@@ -81,7 +83,7 @@ module tube_tower(rows = 8, base_height = 10, supports = true) {
     translate([0, -front_cut[1]/2, 0])
       union() {
         for (y = [-1, 0, 1])
-          for (x = [-1, 0, 1])
+          for (x = [-2, -1, 0, 1, 2])
             translate([x * screw_distance[0], y * screw_distance[1], base_height + z_plus/2])
               rotate([180, 0, 0])
                 machine_screw("1/4-20", base_height + z_plus);
@@ -91,14 +93,14 @@ module tube_tower(rows = 8, base_height = 10, supports = true) {
 }
 
 
-// small tower (10 tubes)
+// small tower (12 tubes)
 color("red") translate([200, 0, 0])
-tube_tower(2, supports = false);
+tube_tower(2, supports = true);
 
-// medium tower (20 tubes)
+// medium tower (24 tubes)
 color("green") translate([0, 0, 0])
 tube_tower(4, supports = true);
 
-// big tower (40 tubes)
-color("yellow") translate([-200, 0, 0])
+// big tower (48 tubes)
+!color("yellow") translate([-200, 0, 0])
 tube_tower(8, supports = true);
