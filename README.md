@@ -4,9 +4,9 @@ This repository holds OpenSCAD modules for frequently used 3D printer parts. The
 
 # What is OpenSCAD?
 
-[OpenSCAD](http://www.openscad.org/) is an open-source cross-platform (Windows/Linux/Mac OSX) 3D CAD modeller based on the OpenSCAD programming language. As a programmable modeller, it is not a drag & drop interactive 3D designer but an actual code-based solution to making complex 3D models. It has a slightly steeper learning curve than drag & drop software like [TinkerCAD](https://www.tinkercad.com/), however, once familiar with its basic syntax, it is immensely powerful and allows for complex, 100% reproducible 3D designs that are easy to customize and share across designs by writing them as modules. Because OpenSCAD designs are literally just text-based script files, they are also perfect for collaboration and version control on GitHub.
+[OpenSCAD](http://www.openscad.org/) is an open-source cross-platform (Windows/Linux/Mac OSX) 3D CAD modeler based on the OpenSCAD programming language. As a programmable modeler, it is not a drag & drop interactive 3D designer but an actual code-based solution to making complex 3D models. It has a slightly steeper learning curve than drag & drop software like [TinkerCAD](https://www.tinkercad.com/), however, once familiar with its basic syntax, it is immensely powerful and allows for complex, 100% reproducible 3D designs that are easy to customize and share across designs by writing them as modules. Because OpenSCAD designs are literally just text-based script files, they are also perfect for collaboration and version control on GitHub.
 
-#### Resources
+# Resources
 
  - [OpenSCAD on GitHub](https://github.com/openscad/openscad/#what-is-openscad)
  - [OpenSCAD documentation](http://www.openscad.org/documentation.html)
@@ -15,9 +15,12 @@ This repository holds OpenSCAD modules for frequently used 3D printer parts. The
 
 # Available Modules
 
-Quick descriptions of the modules in this repository and what they may be useful for:
+Quick descriptions of some of the modules in this repository and what they may be useful for:
 
+ - box: generate box for electronics with lid and container components (the serial device housings are examples of this)
+ - screws: add different types of screws to your design
+ - panel mounts: various cutouts for panels (power plugs, switches, etc.)
  - LCD module: insert LCD holder into a surface
  - stepper holder module: generate NEMA stepper motor holders
- - box: generate box for electronics with lid and container components
- 
+
+For more details, look into the individual `.scad` code files and view the `.stl` files for rendered examples.
