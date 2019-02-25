@@ -66,18 +66,20 @@ function get_hexnut(name) =
 // @param tolerance what tolerance to add (in mm) to the screw radius
 // @param stretch how much to stretch (in mm) the radius in the x direction (to account for collapse in vertical printing), added on top of the tolerance
 // @param z_plus how much thicker to make shape in z (for cutouts)
-module hexnut (name, tolerance = 0.025, stretch = 0, z_plus = 0, screw_hole = true) {
+// @param align whether to align the hexnut to the "bottom" (default), "center" or "top" of the current location (not the bottom)
+module hexnut (name, tolerance = 0.025, stretch = 0, z_plus = 0, screw_hole = true, align = "bottom") {
   nut = get_hexnut(name);
   nut_d = nut[1]/cos(180/6)+2*tolerance; // diameter
   nut_h = nut[2]+2*z_plus; // thickness
+  move_z = (align == "top") ? [0, 0, -nut[2]] : ((align == "center") ? [0, 0, -nut[2]/2] : [0, 0, 0]);
   translate([0, 0, -z_plus])
     // apply stretch to whole shape
     resize([nut_d+2*stretch, 0, 0])
       difference() {
-        cylinder(h=nut_h, d=nut_d, center=false, $fn=6);
+        translate(move_z) cylinder(h=nut_h, d=nut_d, center=false, $fn=6);
         if (screw_hole) {
           // generating screw hole with default tolerance
-          machine_screw(name, nut_h, z_plus = 0.1, countersink = false);
+          translate(move_z) machine_screw(name, nut_h, z_plus = 0.1, countersink = false);
         }
       }
 }
