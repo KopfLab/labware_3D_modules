@@ -74,16 +74,17 @@ module vial_holder(
 }
 
 // example default vial holder for ~25mm vials with base and 2 layers
+translate([200, 0, 0])
+color("gray")
 union() {
   dia = 25.2 + 1; // enough tolerance for very easy use
   holder = "M5";
   well_screws = "1/4-20";
-  translate([100, 0, 0]) color("gray")
-    vial_holder(well_diameter = dia, rows = 3 , cols = 3, holder_screws = holder,
+  vial_holder(well_diameter = dia, rows = 3 , cols = 3, holder_screws = holder,
       holder_base = 4, well_screws = well_screws);
-  translate([100, 0, 30]) color("gray")
+  translate([0, 0, 30])
     vial_holder(well_diameter = dia, rows = 3 , cols = 3, holder_screws = holder);
-  translate([100, 0, 60]) color("gray")
+  translate([0, 0, 60])
     vial_holder(well_diameter = dia, rows = 3 , cols = 3, holder_screws = holder);
 }
 
@@ -94,13 +95,15 @@ union() {
   base = 6.5;
   depth = 10;
   dia = 11.7 + 0.5; // enough tolerance for easy use
-  vial_holder(holder_base = base, well_depth = depth, well_diameter = dia, well_distance_rows = 15.8, well_distance_cols = 15.8, rows = 6, cols = 5, fixed_rows_width = width);
+  vial_holder(holder_base = base, well_depth = depth, well_diameter = dia, well_distance_rows = 15.8, well_distance_cols = 15.8, rows = 6, cols = 15, fixed_rows_width = width);
   // attachment feet
   feet = [25.5, width + 6, base + depth];
-  pos = [2.1, 0, 0];
-  translate(pos)
-    difference() {
-      xy_center_cube(feet);
-      translate([0, 0, -0.1]) xy_center_cube([feet[0] + 0.5, width - 1, feet[2] + 0.2]);
-    }
+  for (x = [-1, 1]) {
+    pos = [x * (79-2.1), 0, 0];
+    translate(pos)
+      difference() {
+        xy_center_cube(feet);
+        translate([0, 0, -0.1]) xy_center_cube([feet[0] + 0.5, width - 1, feet[2] + 0.2]);
+      }
+  }
 }
