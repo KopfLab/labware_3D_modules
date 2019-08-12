@@ -5,8 +5,8 @@ use <screws.scad>;
 // holder for alicat mfcs
 module mfc_holder() {
 
-  mfc_base = [93, 28, 12];
-  rim_height = 7;
+  mfc_base = [92, 27, 12];
+  rim_height = 11;
   rim_depth = 7;
   rim_thickness = 2;
   screw_head_diameter = 12;
