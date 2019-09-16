@@ -7,7 +7,7 @@ module light_sensor_base(fn = 50) {
   holder_wall = 5;  // thickness of the holder wall around the vial
   adapter_height = 5; // height of the adapter rim
   adapter_rim = 2.5; // thickness of the adapter rim
-  adapter_slot_width = 9; // width of the attachment slot
+  adapter_slot_width = 7; // width of the attachment slot
 
   opt_board_cutout = [15.90, 1.7, 11]; // cutout for OPT board
   opt_cutout = [10.0, 6.0, opt_board_cutout[2]]; // cutout for OPT chip
@@ -110,6 +110,20 @@ module light_sensor_base(fn = 50) {
       xy_center_cube([vial_diameter + 2 * holder_wall, adapter_slot_width, adapter_height + cutout_plus]);
     translate([0, 0, base[2]])
       xy_center_cube([adapter_slot_width, vial_diameter + 2 * holder_wall, adapter_height + cutout_plus]);
+
+    // slide adapter cutouts
+    for (x = [-1, 1]) {
+      rotate([0, 0, x * 45])
+      translate([0, 0, -cutout_plus/2])
+      difference() {
+        radius = vial_diameter/2 + holder_wall - adapter_rim;
+        cylinder(h = base[2] + cutout_plus, d = radius * 2, $fn = fn);
+        translate([-radius/2 - adapter_slot_width/2, 0, -cutout_plus])
+          xy_center_cube([radius, radius * 2, base[2] + 3 * cutout_plus]);
+        translate([radius/2 + adapter_slot_width/2, 0, -cutout_plus])
+          xy_center_cube([radius, radius * 2, base[2] + 3 * cutout_plus]);
+      }
+    }
   }
 }
 
