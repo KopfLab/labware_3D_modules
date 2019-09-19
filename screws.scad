@@ -1,3 +1,5 @@
+include <nutsandbolts/cyl_head_bolt.scad>;
+
 // get screw
 function get_screw(name) =
   // different screws
@@ -37,6 +39,24 @@ module machine_screw (name, length, countersink = true, tolerance = 0.15, stretc
         resize([screw_cs[0]+2*stretch, 0, 0])
           cylinder(h=screw_cs[1], d1=screw_cs[0], d2=0, center=false, $fn=fn);
     }
+  }
+}
+
+// make a threaded machine screw --> uses the https://github.com/JohK/nutsnbolts library
+// @param name which screw
+// @param length how long to make the hole maximally
+// @param countersink whether to countersink the screw
+// @render_threads true/false whether to render the threads, set the global $render_threads = true; to turn on globally
+module threaded_machine_screw (name, length, countersink = false, render_threads = $render_threads) {
+  if (countersink) {
+    echo("warning - countersink not yet implemented for threaded machine screws");
+    // note: this should be possible with the dimensions from the screws library for head diameter and head height!
+  }
+  translate([0, 0, length])
+  if (render_threads) {
+    hole_threaded(name = name, thread = "modeled", l = length);
+  } else {
+    hole_threaded(name = name, thread = "no", l = length);
   }
 }
 
