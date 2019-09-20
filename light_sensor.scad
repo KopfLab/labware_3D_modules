@@ -145,11 +145,11 @@ light_sensor_base(vial_diameter = 55.5); // for 100mL bottles
 // @param adapter_height height of the adapter top (make 0 to remove adapter top)
 module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 
-  holder_wall = 5;  // thickness of the holder wall around the vial
-  adapter_rim = 2.5 + 0.2; // thickness of the adapter rim (plus tolerance for good fit)
-  adapter_slot_width = 7 - 0.2; // width of the attachment slot (minus tolerance for good fit)
+  holder_wall = 8;  // thickness of the holder wall around the vial
+  adapter_rim = 4 + 0.2; // thickness of the adapter rim (plus tolerance for good fit)
+  adapter_slot_width = 10 - 0.2; // width of the attachment slot (minus tolerance for good fit)
 
-  support_feet = [10, 10, 6]; // length, width, height of support feet
+  support_feet = [10, 10, 8]; // length, width, height of support feet
 
   bottom_thickness = 4; // thickness of the bottom
   bottom_diameter = 30; // diameter of hole on bottom
@@ -216,4 +216,4 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 
 }
 
-!stirred_bottle_holder(vial_diameter = 55.5, base_height = 20);
+!stirred_bottle_holder(vial_diameter = 57, base_height = 20);
