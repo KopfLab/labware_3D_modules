@@ -19,7 +19,7 @@ module light_sensor_base(vial_diameter, base_height = 13, adapter_height = 5) {
   adapter_rim = 2.5; // thickness of the adapter rim
   adapter_slot_width = 7; // width of the attachment slot
 
-  opt_board_cutout = [15.90, 1.7, 11]; // cutout for OPT board
+  opt_board_cutout = [15.95, 1.7, 11]; // cutout for OPT board
   opt_cutout = [10.0, 6.0, opt_board_cutout[2]]; // cutout for OPT chip
   opt_pin_depth = 2; // space to leave for the OPT pins behind the board
 
@@ -145,46 +145,65 @@ light_sensor_base(vial_diameter = 55.5); // for 100mL bottles
 // @param adapter_height height of the adapter top (make 0 to remove adapter top)
 module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 
+  echo(str("INFO: rendering stirred bottle holder for ", vial_diameter, "mm tubes..."));
+
   holder_wall = 8;  // thickness of the holder wall around the vial
   adapter_rim = 4 + 0.2; // thickness of the adapter rim (plus tolerance for good fit)
   adapter_slot_width = 10 - 0.2; // width of the attachment slot (minus tolerance for good fit)
+  total_diameter = vial_diameter + 2 * holder_wall; // total diameter
 
-  support_feet = [10, 10, 8]; // length, width, height of support feet
+  stand_feet = [12, 12, 6]; // length, width, height of support feet
+  stand_feet_support = 8; // height of support for the stand feet
 
-  bottom_thickness = 4; // thickness of the bottom
+  bottom_thickness = 5; // thickness of the bottom
   bottom_diameter = 30; // diameter of hole on bottom
 
   stepper_width = 42; // +/- 0.1
 
+  pcb_board = [18, 1.7, 20]; // PCB board cutout
+
   difference() {
     union() {
       // vial holder
-      cylinder(h = base_height + adapter_height, d = vial_diameter + 2 * holder_wall);
-      // support feet
-      total_diameter = vial_diameter + 2 * holder_wall + 2 * support_feet[1];
-      for (x = [90, 210, 330]) {
-        rotate([0, 0, x])
+      cylinder(h = base_height, d = total_diameter);
+
+      // adapters
+      height = (vial_diameter / 2 + holder_wall) * adapter_height / holder_wall;
+      translate([0, 0, base_height])
+      for (angle = [120, 240, 360]) {
+        rotate([0, 0, angle])
         difference() {
-          cylinder(h = support_feet[2], d = total_diameter);
+          cylinder(h = height, d1 = total_diameter, d2 = 0);
+          translate([0, 0, adapter_height]) cylinder(h = height, d = total_diameter);
           for (x = [-1, 1]) {
-            translate([0, x * (total_diameter + support_feet[1])/2, -e])
-            xy_center_cube([total_diameter + 2e, total_diameter, support_feet[2] + 2e]);
+            translate([0, x * (total_diameter + adapter_slot_width)/2, 0])
+            xy_center_cube([total_diameter, total_diameter, adapter_height + e]);
           }
-          translate([-total_diameter/2, 0, -e])
-            xy_center_cube([total_diameter, total_diameter, support_feet[2] + 2e]);
-          translate([(total_diameter - support_feet[1])/2, 0, -e])
-            threaded_machine_screw(name = "M4", length = support_feet[2] + 2e);
         }
       }
-    }
 
-    // slide adapters
-    translate([0, 0, base_height])
-    difference() {
-      cylinder(h = adapter_height + e, d = vial_diameter + 2 * holder_wall + e);
-      for (x = [-1, 1]) {
-        rotate([0, 0, x * 45])
-        xy_center_cube([vial_diameter + 2 * holder_wall - 2 * adapter_rim, adapter_slot_width, adapter_height + 2e]);
+      // support feet
+      total_diameter_w_feet = total_diameter + 2 * stand_feet[1];
+      for (x = [30, 150, 270]) {
+        rotate([0, 0, x])
+        difference() {
+          height = (total_diameter_w_feet) * (stand_feet_support) / (holder_wall + stand_feet[1]);
+          union() {
+            cylinder(h = stand_feet[2], d = total_diameter_w_feet);
+            translate([0, 0, stand_feet[2]])
+              cylinder(h = height, d1 = total_diameter_w_feet, d2 = 0);
+          }
+          translate([0, 0, base_height-e]) cylinder(h = height, d = total_diameter_w_feet+2e);
+          for (x = [-1, 1]) {
+            translate([0, x * (total_diameter_w_feet + stand_feet[1])/2, -e])
+            xy_center_cube([total_diameter_w_feet + 2e, total_diameter_w_feet, stand_feet[2] + height + 2e]);
+          }
+          translate([-total_diameter_w_feet/2, 0, -e])
+            xy_center_cube([total_diameter_w_feet, total_diameter_w_feet, stand_feet[2] + height + 2e]);
+          translate([(total_diameter_w_feet - stand_feet[1])/2, 0, -e])
+            machine_screw(name = "M3", countersink = false, length = stand_feet[2] + height + 2e);
+          translate([(total_diameter_w_feet - stand_feet[1])/2, 0, stand_feet[2]]) cylinder(h = height, d = 6);
+        }
       }
     }
 
@@ -201,19 +220,26 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
       machine_screw(name = "M3", length = bottom_thickness + 2e);
     }
 
-  }
+    // attachment screws (using M4 although it's for M3 screws for low quality printers)
+    for (x = [30, 150, 270]) {
+      rotate([0, 0, x])
+        translate([vial_diameter/2 + holder_wall/2, 0, -e])
+          threaded_machine_screw(name = "M4", length = base_height + 2e);
+    }
 
-/*
-  difference() {
-  	translate([-15, -15, 0]) cube([80, 30, 50]);
-  	rotate([180,0,0]) nutcatch_parallel("M5", l=5);
-  	//translate([-15, 0, 50+e]) hole_through(name="M5", l=50+5, cld=0.1, h=10, hcld=0.4);
-  	translate([-15, 0, 50+e]) threaded_machine_screw(name = "M4", length = 50+2e);
-  	translate([55, 0, 9+e]) nutcatch_sidecut("M8", l=100, clk=0.1, clh=0.1, clsl=0.1);
-  	translate([55, 0, 50+e]) hole_through(name="M8", l=50+5, cld=0.1, h=10, hcld=0.4);
-  	translate([27.5, 0, 50+e]) hole_threaded(name="M5", l=60);
-  }*/
+    // PCB board attachment
+    translate([0, (vial_diameter + holder_wall)/2, -e]) xy_center_cube(pcb_board);
+    for (x = [-1, 1]) {
+      for (z = [2.5, 6]) {
+        translate([x * 5, 1.5 * vial_diameter - 2e, base_height/z])
+          rotate([90, 0, 0])
+            threaded_machine_screw(name = "M4", length = vial_diameter);
+      }
+    }
+
+
+  }
 
 }
 
-!stirred_bottle_holder(vial_diameter = 57, base_height = 20);
+!stirred_bottle_holder(vial_diameter = 56, base_height = 20);
