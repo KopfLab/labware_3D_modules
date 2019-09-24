@@ -13,41 +13,46 @@ $render_threads=true; // turning thread rendering on/off
 // @param vial_diameter diameter of the vial/bottle
 // @param base_height height of the base (must be at least 13 to clear the cutouts)
 // @param adapter_height height of the adapter top (make 0 to remove adapter top)
-module light_sensor_base(vial_diameter, base_height = 13, adapter_height = 5) {
+module light_sensor_base(vial_diameter, base_height = 13, adapter_height = 10) {
 
-  holder_wall = 5;  // thickness of the holder wall around the vial
-  adapter_rim = 2.5; // thickness of the adapter rim
-  adapter_slot_width = 7; // width of the attachment slot
+  echo(str("INFO: rendering light sensor base for ", vial_diameter, "mm tubes..."));
 
-  opt_board_cutout = [15.95, 1.7, 11]; // cutout for OPT board
-  opt_cutout = [10.0, 6.0, opt_board_cutout[2]]; // cutout for OPT chip
+  holder_wall = 8;  // thickness of the holder wall around the vial
+  adapter_rim = 4; // thickness of the adapter rim
+  adapter_slot_width = 10 + 0.2; // width of the attachment slot
+  total_diameter = vial_diameter + 2 * holder_wall; // total diameter
+
+  opt_board_cutout = [16.1, 1.7, 11]; // cutout for OPT board
+  opt_cutout = [10.0, 4.8, opt_board_cutout[2]]; // cutout for OPT chip
   opt_pin_depth = 2; // space to leave for the OPT pins behind the board
 
   light_tunnel_diameter = 4; // photodiode area cross section ~ 3.35mm
   light_tunnel_opt_base_offset = 5.5; // center of sensor from base of sensor cutout
-  light_tunnel_length_to_main_sensor = 5; // how far from tunnel wall is sensor located
+  light_tunnel_length_to_main_sensor = 4; // how far from tunnel wall is sensor located
   light_tunnel_length_to_side_sensor = 8; // how far from glass is the side sensor?
-  light_tunnel_length_to_glass = 10; // how far from tunnel wall is cover glass located
+  light_tunnel_length_to_glass = 15; // how far from tunnel wall is cover glass located
   light_tunnel_length_to_led = 5; // how far from glass is led
 
-  cover_slip = [12.2, 12.2, .3]; // dimensions of cover slip
+  cover_slip = [12.4, 12.4, .3]; // dimensions of cover slip
 
   led_diameter = 4.9; // includes tolerance
   led_height = 5.0; // total Led height
   led_back_diameter = 5.6; // back plate diameter
   led_back_height = 0.7; // back plate thickness
   led_pin_depth = 2; // space to leave for LED pins
+  led_guide = [1, 1, led_back_height]; // guide pin width, length and thickness
+  led_max_diameter = led_back_diameter + 2 * led_guide[1];
 
-  base_right = [light_tunnel_length_to_glass + light_tunnel_length_to_led + led_height + led_pin_depth - 2e + 5, 27, base_height];
+  base_right = [light_tunnel_length_to_glass + light_tunnel_length_to_led + led_height + led_pin_depth - 2e + 5, 26, base_height];
   base_right_location = [vial_diameter/2 + base_right[0]/2 - 5, -6, 0];
-  base_left = [17, 19, base_height];
+  base_left = [15, 20, base_height];
   base_left_location = [-vial_diameter/2 - base_left[0]/2, 0, 0];
   light_tunnel_z = base_height - opt_cutout[2] + light_tunnel_opt_base_offset;
 
   difference() {
     union() {
       // vial holder
-      cylinder(h = base_height + adapter_height, d = vial_diameter + 2 * holder_wall);
+      cylinder(h = base_height + adapter_rim, d = total_diameter);
 
       // base right
       translate(base_right_location) xy_center_cube(base_right);
@@ -56,19 +61,30 @@ module light_sensor_base(vial_diameter, base_height = 13, adapter_height = 5) {
       translate(base_left_location) xy_center_cube(base_left);
     }
 
-    // led cutout
+    // LED cutout
+    color("green")
+    scale([1,1,1.03]) // 3% z-stretch
     translate([vial_diameter/2 + light_tunnel_length_to_glass + light_tunnel_length_to_led + led_height, -e, light_tunnel_z])
     rotate([0, -90, 0])
+    translate([0, 0, -led_pin_depth])
     union() {
-      cylinder(h = led_back_height, d = led_back_diameter);
-      translate([0, 0, -led_pin_depth]) cylinder(h = led_height + led_pin_depth, d = led_diameter);
-      // top access
-      translate([(base_height - light_tunnel_opt_base_offset)/2, 0, 0])
-        xy_center_cube([base_height - light_tunnel_opt_base_offset, led_back_diameter, led_back_height]);
-      translate([(base_height - light_tunnel_opt_base_offset)/2, 0, -led_pin_depth])
-        xy_center_cube([base_height - light_tunnel_opt_base_offset, led_diameter, led_height + led_pin_depth]);
+      difference() {
+        cylinder(h = led_guide[2] + led_pin_depth, d = led_max_diameter);
+        for (x = [-1, 1]) {
+          translate([led_max_diameter/2, x * (led_max_diameter/2 + led_guide[0]/2 + e), - e])
+              xy_center_cube([led_max_diameter, led_max_diameter, led_pin_depth + e]);
+        }
+        translate([-led_max_diameter/2 + e, 0, -e])
+            xy_center_cube([led_max_diameter, led_max_diameter, led_guide[2] + led_pin_depth + 2e]);
+      }
+      cylinder(h = led_pin_depth + led_back_height, d = led_back_diameter);
+      cylinder(h = led_height + led_pin_depth, d = led_diameter);
+      // set screw
+      for (x = [0, -120]) {
+        translate([0, 0, led_pin_depth + led_height/2]) rotate([x, 90, 0])
+        threaded_machine_screw(name = "M3", length = 20 + 2e);
+      }
     }
-
     // cover slip cutout
     translate([vial_diameter/2 + light_tunnel_length_to_glass, 0, base_height - opt_cutout[2]])
       rotate([0, 0, -45])
@@ -112,32 +128,43 @@ module light_sensor_base(vial_diameter, base_height = 13, adapter_height = 5) {
       cylinder(h = base_height + adapter_height + 2e, d = vial_diameter);
     // adapter rim cutout
     translate([0, 0, base_height])
-      cylinder(h = adapter_height + 2e, d = vial_diameter + 2 * holder_wall - 2 * adapter_rim);
-    // adapter slot cutouts
+      cylinder(h = adapter_height + 2e, d = total_diameter - 2 * adapter_rim);
+    // rim slot cutouts
     translate([0, 0, base_height])
-      xy_center_cube([vial_diameter + 2 * holder_wall, adapter_slot_width, adapter_height + 2e]);
+      xy_center_cube([total_diameter, adapter_slot_width, adapter_height + 2e]);
     translate([0, 0, base_height])
-      xy_center_cube([adapter_slot_width, vial_diameter + 2 * holder_wall, adapter_height + 2e]);
+      xy_center_cube([adapter_slot_width, total_diameter, adapter_height + 2e]);
 
     // slide adapter cutouts
-    for (x = [-1, 1]) {
-      rotate([0, 0, x * 45])
-      translate([0, 0, -e])
+    height = (vial_diameter / 2 + holder_wall) * adapter_height / holder_wall;
+    translate([0, 0, -e])
+    color("red")
+    for (angle = [150, 270, 30]) {
+      rotate([0, 0, angle])
       difference() {
-        radius = vial_diameter/2 + holder_wall - adapter_rim;
-        cylinder(h = base_height + 2e, d = radius * 2);
-        translate([-radius/2 - adapter_slot_width/2, 0, -e])
-          xy_center_cube([radius, radius * 2, base_height + 2e]);
-        translate([radius/2 + adapter_slot_width/2, 0, -e])
-          xy_center_cube([radius, radius * 2, base_height + 2e]);
+        cylinder(h = height, d1 = total_diameter, d2 = 0);
+        translate([0, 0, adapter_height]) cylinder(h = height, d = total_diameter);
+        for (x = [-1, 1]) {
+          translate([0, x * (total_diameter + adapter_slot_width)/2, 0])
+          xy_center_cube([total_diameter, total_diameter, adapter_height + e]);
+        }
       }
     }
+
+    // attachment screws
+    // FIXME: use only 90, 270 and either remove the supports at these positions or drill through them
+    for (x = [60, 300, 90, 270]) {
+      rotate([0, 0, x])
+        translate([vial_diameter/2 + holder_wall/2, 0, -e])
+          machine_screw(name = "M3", countersink=false, length = base_height + adapter_rim + 2e);
+    }
+
   }
 }
 
 // light sensor base
-color("grey") translate([0, 0, 35])
-light_sensor_base(vial_diameter = 55.5); // for 100mL bottles
+//color("grey") translate([0, 0, 35])
+!light_sensor_base(vial_diameter = 55.5); // for 100mL bottles
 
 // generate stirred bottle holder
 // @param vial_diameter diameter of the vial/bottle
@@ -148,7 +175,6 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
   echo(str("INFO: rendering stirred bottle holder for ", vial_diameter, "mm tubes..."));
 
   holder_wall = 8;  // thickness of the holder wall around the vial
-  adapter_rim = 4 + 0.2; // thickness of the adapter rim (plus tolerance for good fit)
   adapter_slot_width = 10 - 0.2; // width of the attachment slot (minus tolerance for good fit)
   total_diameter = vial_diameter + 2 * holder_wall; // total diameter
 
@@ -242,4 +268,4 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 
 }
 
-!stirred_bottle_holder(vial_diameter = 56, base_height = 20);
+stirred_bottle_holder(vial_diameter = 56, base_height = 20);
