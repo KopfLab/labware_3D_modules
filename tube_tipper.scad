@@ -22,11 +22,11 @@ module tube_tipper(number_tubes = 5) {
   tube_diameter = 18.2; // diameter of the tubes
   tube_z_stretch = 1; // how much to stretch in vertical direction to account for printing collapse
   total_width = number_tubes * (tube_diameter + tube_spacing) + tube_spacing + foot[1];
-  total_height = 1.75 * tube_spacing + 1 * (tube_diameter + tube_z_stretch);
+  total_height = 1.75 * tube_spacing + 1.25 * (tube_diameter + tube_z_stretch);
 
   // back wall dimensions
   back_wall_thickness = 3;
-  back_wall_height = 0.5 * tube_spacing + 0.5 * tube_diameter + tube_z_stretch;
+  back_wall_height = 1 * tube_spacing + 0.5 * tube_diameter + tube_z_stretch;
   tube_list = [for (i = [1 : 1 : number_tubes]) i];
 
   union() {
@@ -40,7 +40,7 @@ module tube_tipper(number_tubes = 5) {
         for (x = [0, 1]) {
           translate([-wall_thickness,
             (y - (number_tubes+1)/2) * (tube_diameter + tube_spacing),
-            -0.5 * (tube_spacing + tube_diameter) + (0.5 + x) * (tube_diameter + tube_z_stretch + tube_spacing)])
+            -0.5 * (tube_spacing + 0.75 * tube_diameter) + (0.5 + x) * (tube_diameter + tube_z_stretch + tube_spacing)])
           resize([0, 0, tube_diameter + tube_z_stretch])
           rotate([0, 71, 0])
           cylinder(d = tube_diameter, h = 2 * wall_thickness);
@@ -57,9 +57,9 @@ module tube_tipper(number_tubes = 5) {
       for(y = tube_list) {
         translate([-wall_thickness,
             (y - (number_tubes+1)/2) * (tube_diameter + tube_spacing),
-            0])
+            0.25 * tube_spacing])
           rotate([0, 71, 0])
-          cylinder(d = 0.5 * tube_diameter, h = 2 * wall_thickness);
+          cylinder(d = 0.5 * (tube_diameter + tube_z_stretch), h = 2 * wall_thickness);
       }
     }
 
