@@ -13,20 +13,20 @@ $fn=60; // number of vertices when rendering cylinders
 module tube_tipper(number_tubes = 5) {
 
   // support feet dimensions
-  foot = [20, 5, 10]; // feet dimensions
+  foot = [20, 10, 10]; // feet dimensions
 
   // tube holes
   wall_thickness = 10; // width of the walls
   tube_head_gap = 9; // how big a gap for the tube heads
   tube_spacing = 2; // how much space between each tube hole
   tube_diameter = 18.2; // diameter of the tubes
-  tube_z_stretch = 1; // how much to stretch in vertical direction to account for printing collapse
-  total_width = number_tubes * (tube_diameter + tube_spacing) + tube_spacing + foot[1];
-  total_height = 1.75 * tube_spacing + 1 * (tube_diameter + tube_z_stretch);
+  tube_z_stretch = 1.5; // how much to stretch in vertical direction to account for printing collapse
+  total_width = number_tubes * (tube_diameter + tube_spacing) + tube_spacing + 2 * foot[1];
+  total_height = 1.75 * tube_spacing + 1.5 * (tube_diameter + tube_z_stretch);
 
   // back wall dimensions
   back_wall_thickness = 3;
-  back_wall_height = 0.5 * tube_spacing + 0.5 * tube_diameter + tube_z_stretch;
+  back_wall_height = 1 * tube_spacing + 0.75 * tube_diameter + tube_z_stretch;
   tube_list = [for (i = [1 : 1 : number_tubes]) i];
 
   union() {
@@ -37,10 +37,10 @@ module tube_tipper(number_tubes = 5) {
 
       // tube holes
       for(y = tube_list) {
-        for (x = [0, 1]) {
+        for (x = [-0.3, 1]) {
           translate([-wall_thickness,
             (y - (number_tubes+1)/2) * (tube_diameter + tube_spacing),
-            -0.5 * (tube_spacing + tube_diameter) + (0.5 + x) * (tube_diameter + tube_z_stretch + tube_spacing)])
+            -0.5 * tube_spacing + (0.45 + x) * (tube_diameter + tube_z_stretch + tube_spacing)])
           resize([0, 0, tube_diameter + tube_z_stretch])
           rotate([0, 71, 0])
           cylinder(d = tube_diameter, h = 2 * wall_thickness);
@@ -57,9 +57,10 @@ module tube_tipper(number_tubes = 5) {
       for(y = tube_list) {
         translate([-wall_thickness,
             (y - (number_tubes+1)/2) * (tube_diameter + tube_spacing),
-            0])
+            0.25 * tube_spacing])
+          resize([0, 0, tube_diameter + tube_z_stretch])
           rotate([0, 71, 0])
-          cylinder(d = 0.5 * tube_diameter, h = 2 * wall_thickness);
+          cylinder(d = 0.5 * (tube_diameter), h = 2 * wall_thickness);
       }
     }
 
@@ -163,7 +164,10 @@ module tube_tipper_old(number_tubes = 10, base_height = 10) {
 
 
 // medium tube tipper (5 tubes)
-// tube_tipper(5);
+tube_tipper(5);
 
 // large tube tipper (10 tubes)
-tube_tipper(10);
+// tube_tipper(10);
+
+// tube tipper for little incubator (9 tubes)
+// tube_tipper(9);
