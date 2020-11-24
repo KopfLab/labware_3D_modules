@@ -53,7 +53,7 @@ tube_holder(tube_size_inch = 1/4, with_hexnuts = true);
 color("yellow")
 translate([0, 0, -5])
 rotate([0, 180, 0])
-tube_holder(tube_size_inch = 1/4);
+tube_holder(10, tube_size_inch = 1/4);
 
 // difference spacers
 color("red")
@@ -64,6 +64,6 @@ color("red")
 translate([0, 0, -30])
 tube_holder_spacer(5);
 
-color("red")
+!color("red")
 translate([0, 0, -45])
 tube_holder_spacer(10);
