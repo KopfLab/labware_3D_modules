@@ -254,6 +254,16 @@ module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], port_only
   }
 }
 
+// RJ11 6p4c telephone cable port
+// https://www.amazon.com/gp/product/B07KYTMXJN
+module RJ11_port (thickness, location = [0,0,0], rotation = [0,0,0], show = false, tolerance = 0.15) {
+  cutout = [22.80, 21.10, 27.00];
+  face = [38.40, 21.10, 4.70];
+  screws = ["M3", 14.50, 0, 0.3];
+  panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
+  children(0);
+}
+
 // Adafruit RJ45/Ethernet port
 // --> usually using the PCB with integrated ethernet instead
 // https://www.adafruit.com/product/909
