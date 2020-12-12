@@ -2,6 +2,10 @@
 use <utils.scad>;
 use <screws.scad>;
 
+// constants
+e = 0.01; // small extra for removing artifacts during differencing
+2e= 0.02; // twice epsilon for extra length when translating by -e
+
 // HELPER MODULES //
 
 // standard attachment for a rectangular module affixed on top of a board
@@ -37,9 +41,14 @@ module show_block (block, location, rotation, show = false) {
     children(0);
     if (show) {
       // cube outline (not printed)
-      translate(location) rotate(rotation)
-        translate([0, 0, block[3]])
-          #xy_center_cube([block[0], block[1], block[2]]);
+      if (str(block[3]) != "undef") {
+        translate(location) rotate(rotation)
+          translate([0, 0, block[3]])
+            #xy_center_cube([block[0], block[1], block[2]]);
+      } else {
+        translate(location) rotate(rotation)
+            #xy_center_cube([block[0], block[1], block[2]]);
+      }
     }
   }
 }
@@ -61,7 +70,7 @@ module photon_board(thickness, location = [0,0,0], rotation = [0,0,0], with_RJ45
   if (with_RJ45) {
     panel_attachment(thickness, screws, board, location, rotation, show)
     show_block(power, location + power_location, rotation, show)
-    panel_cut_out(thickness, rj45, location + rj45_location, rotation, show)
+    panel_cut_out(thickness = thickness, cutout = rj45, location + rj45_location, rotation = rotation, show = show)
     children(0);
   } else {
     panel_attachment(thickness, screws, board, location, rotation, show)
@@ -184,21 +193,32 @@ module panel_screw_in (thickness, cutout, face, screws, location = [0,0,0], rota
 }
 
 // standard panel cutout (use screw_in or snap_in for fastening cutouts)
+// use x_round and/or y_round to add round panel cutouts to the square
 // @param thickness how thick base board is
 // @param cutout dimensions of snap in cutout (length, width, thickness)
 // @param location central point of the cutout
 // @param rotation how much to rotate
+// @param x_round whether to add rounding in x
+// @param y_round whether to add rounding in y
 // @param show whether to show cube (not intended for printing)
 // @param tolerance how much tolerance to add to the snap in cutout
-module panel_cut_out (thickness, cutout, location = [0,0,0], rotation = [0,0,0], show = false, tolerance = 0.15) {
-  z_plus = 0.1; // how much thicker to make cutouts in z
+module panel_cut_out (thickness, cutout, location = [0,0,0], rotation = [0,0,0], x_round = false, y_round = false, show = false, tolerance = 0.15) {
   difference() {
     show_block (cutout + [2*tolerance, 2*tolerance, 0], location, rotation, show)
     children(0);
-
     translate(location) rotate(rotation) {
-      translate([0, 0, -z_plus])
-        xy_center_cube([cutout[0], cutout[1], cutout[2]+2*z_plus]);
+      translate([0, 0, -e])
+        xy_center_cube([cutout[0], cutout[1], cutout[2] + 2e]);
+      if (x_round) {
+        for (x = [-1, 1])
+          translate([x * cutout[0]/2, 0, -e])
+            cylinder(h = cutout[2] + 2e, d = cutout[1], $fn = 120);
+      }
+      if (y_round) {
+        for (y = [-1, 1])
+          translate([0, y * cutout[1]/2, -e])
+            cylinder(h = cutout[2] + 2e, d = cutout[0], $fn = 120);
+      }
     };
   }
 }
@@ -208,7 +228,6 @@ module panel_cut_out (thickness, cutout, location = [0,0,0], rotation = [0,0,0],
 module AC_power (thickness, location = [0,0,0], rotation=[0,0,0], show = false, tolerance = 0.15) {
   cutout = [46.9, 27.9, 30.35];
   face = [50, 30.5, 2.5];
-  clips = [42.5/2, 27.8/2, 4, 3, 2];
   clips = [42.5/2, cutout[1]/2 + 1.3, 4.5, 3.2, 3.5];
   panel_snap_in(thickness, cutout, face, clips, location, rotation, show, tolerance)
   children(0);
@@ -240,7 +259,7 @@ module DB9_serial_port (thickness, location = [0,0,0], rotation=[0,0,0], show = 
 // https://www.adafruit.com/product/3258
 // Note: could consider making the outside of these screws countersunk
 // @param port_only whether to include the cable port only (otherwise the whole panel mount adapter withs crews)
-module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], port_only = false, show = false, tolerance = 0.15) {
+module MicroUSB_port (thickness, location = [0,0,0], rotation = [0,0,0], port_only = false, show = false, tolerance = 0.15) {
   cutout = [11.0, 8.0, 22.0];
   face = [25.0, 10.0, 5.43];
   screws = ["4-40", 9, 0, 0.3];
@@ -248,8 +267,9 @@ module MicroUSB_port (thickness, location = [0,0,0], rotation=[0,0,0], port_only
     panel_screw_in(thickness, cutout, face, screws, location, rotation, show, tolerance)
     children(0);
   } else {
-    // for port only, make tolerance a little bigger (2mm increase)
-    panel_cut_out(thickness, cutout + [2, 2, 0], location, rotation, show, tolerance)
+    // for port only, make tolerance a little bigger (2mm increase) and add half circle extra space for thicker wires
+    cutout = cutout + [2, 2, 0];
+    panel_cut_out(thickness = thickness, cutout = cutout, location = location, rotation = rotation, y_round = true, show = show, tolerance = tolerance)
     children(0);
   }
 }
