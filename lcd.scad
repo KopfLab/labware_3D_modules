@@ -21,8 +21,7 @@ module LCD(type = "16x2", location = [0,0,0]) {
     ["20x4", [97.5, 40.3, 9.5], [0,  0.0, 0], ["M3", 46.5, 27.6, 0.35], 6] // FIXME not exact
   ];
   type_idx = search([type], types)[0];
-
-  if (len(type_idx) == 0) {
+  if (type_idx == []) {
     echo(str("cannot render LCD - unrecognized type '", type , "'"));
   } else {
     echo(str("rendering LCD type '", type , "'"));
