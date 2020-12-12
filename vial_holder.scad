@@ -17,6 +17,7 @@ use <screws.scad>;
 // @param fixed_cols_width fixed width of holder (by default is calculated autmatically from cols)
 // @param fixed_rows_width fixed height of holder (by default is calculated autmatically from rows)
 // @param holder_screws what kind of screws to use for attachment locations between the wells (use false if none)
+// @param holder_edge_screws if > 0, adds screws on the edge of the holder with the indicated offset (so they fit)
 // @param well_screws what kind of countersink screws to use at the base of each well (use false if none)
 module vial_holder(
   holder_base = 0,
@@ -24,7 +25,7 @@ module vial_holder(
   well_distance_rows = false, well_distance_cols = false,
   rows = 5, cols = 5,
   fixed_rows_width = false, fixed_cols_width = false,
-  holder_screws = "M4",
+  holder_screws = "M4", holder_edge_screws = false,
   well_screws = "M4") {
 
   // constants
@@ -63,12 +64,15 @@ module vial_holder(
           }
     // attachment screws
     if (holder_screws) {
-      row_list = [for (i = [1 : 1 : (rows-1)]) i];
-      col_list = [for (i = [1 : 1 : (cols-1)]) i];
+      row_list = (holder_edge_screws) ? [for (i = [0 : 1 : rows]) i] : [for (i = [1 : 1 : (rows-1)]) i];
+      col_list = (holder_edge_screws) ? [for (i = [0 : 1 : cols]) i] : [for (i = [1 : 1 : (cols-1)]) i];
       for (y = row_list)
-        for (x = col_list)
-          translate([(x + 0.5 - (cols + 1)/2) * well_distance_cols, (y + 0.5 - (rows + 1)/2) * well_distance_rows, 0])
+        for (x = col_list) {
+          x_offset = (x == 0) ? holder_edge_screws : ((x == cols) ? -holder_edge_screws : 0);
+          y_offset = (y == 0) ? holder_edge_screws : ((y == rows) ? -holder_edge_screws : 0);
+          translate([x_offset + (x + 0.5 - (cols + 1)/2) * well_distance_cols, y_offset + (y + 0.5 - (rows + 1)/2) * well_distance_rows, 0])
           machine_screw(holder_screws, length = base[2], tolerance = 0.15, z_plus = z_plus, countersink = false);
+        }
     }
   }
 }
@@ -104,6 +108,44 @@ union() {
       difference() {
         xy_center_cube(feet);
         translate([0, 0, -0.1]) xy_center_cube([feet[0] + 0.5, width - 1, feet[2] + 0.2]);
+      }
+  }
+}
+
+// specialized vial holder for 40ml VOA vials in fraction collector tray (assemble two with standoffs)
+!union() {
+  // base vial holder
+  width = 98;
+  length = 241.5;
+  base = 0;
+  depth = 5;
+  dia = 27.5 + 0.5; // enough tolerance for easy use
+  vial_holder(
+    holder_base = base, well_depth = depth, well_diameter = dia,
+    well_distance_rows = dia + 3.5, well_distance_cols = dia + 5.75,
+    rows = 3, cols = 7,
+    fixed_rows_width = width, fixed_cols_width = length,
+    holder_screws = "M3",
+    holder_edge_screws = 3
+  );
+  // attachment feet
+  feet = [25, width + 6, base + depth];
+  tags = [3.5, width + 6, base + depth];
+  for (x = [-1, 1]) {
+    pos = [x * (79-2.1), 0, 0];
+    translate(pos)
+      difference() {
+        xy_center_cube(feet);
+        translate([0, 0, -0.1]) xy_center_cube([feet[0] + 0.5, width - 1, feet[2] + 0.2]);
+      };
+    translate(pos)
+      for (y = [-1, 1]) {
+        translate([y * 41.25/2, 0, 0]) {
+          difference() {
+            xy_center_cube(tags);
+            translate([0, 0, -0.1]) xy_center_cube([tags[0] + 0.5, width - 1, tags[2] + 0.2]);
+          }
+        }
       }
   }
 }
