@@ -23,7 +23,7 @@ box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 translate([0, 0, 5])
 color("green")
 MicroUSB_port(thickness = thickness, location = [size[0]/2, 0, 25], rotation = [270, 0, 90], port_only = true, show = show)
-box_body(size, length = size[2], vent_width = 3, vents = 3, vents_both_sides = false);
+box_body(size, length = size[2], vent_width = 3, vents = 0);
 
 // front panel
 translate([0, 0, 60])
