@@ -74,8 +74,9 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
 // @param holders thickness (in mm) of holders for wall attachment
 // @param vents number of vents
 // @param vent_width the width of each vent (in mm)
+// @param vent_spacing_mod how much to change vent spacing from default (can be - or +, in mm)
 // @param vents_both_sides whether vents on both or only one side
-module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, vents_both_sides = true) {
+module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, vent_spacing_mod = 0, vents_both_sides = true) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -114,7 +115,7 @@ module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, 
 
     // ventilation
     vent_list = [for (i = [1 : 1 : vents]) i];
-    total_vent_space = size[1] - 2 * wall - 2 * vent_width;
+    total_vent_space = size[1] - 2 * wall - 2 * vent_width + vents * vent_spacing_mod;
     vent_spacing = total_vent_space/(vents + 1);
     for(y = vent_list)
       translate(ventilation_location)
