@@ -130,22 +130,34 @@ union() {
   );
   // attachment feet
   feet = [25, width + 6, base + depth];
-  tags = [3.5, width + 6, base + depth];
   for (x = [-1, 1]) {
-    pos = [x * (79-2.1), 0, 0];
-    translate(pos)
+    translate([x * (79-2.1), 0, 0])
       difference() {
         xy_center_cube(feet);
         translate([0, 0, -0.1]) xy_center_cube([feet[0] + 0.5, width - 1, feet[2] + 0.2]);
-      };
-    translate(pos)
-      for (y = [-1, 1]) {
-        translate([y * 41.25/2, 0, 0]) {
-          difference() {
-            xy_center_cube(tags);
-            translate([0, 0, -0.1]) xy_center_cube([tags[0] + 0.5, width - 1, tags[2] + 0.2]);
-          }
-        }
       }
   }
+
+  // y tags
+  y_tags = [3.5, width + 6, 3.3];
+  for (x = [-1, 1]) {
+    for (y = [-1, 1]) {
+      translate([x * (79-2.1) + y * 41.25/2, 0, 0])
+        difference() {
+          xy_center_cube(y_tags);
+          translate([0, 0, -0.1]) xy_center_cube([y_tags[0] + 0.5, width - 1, y_tags[2] + 0.2]);
+        }
+    }
+  }
+
+  // x tags
+  x_tags = [length + 6, 3.5, 3.3];
+  for (y = [-1, 1]) {
+    translate([0, y * 26.5, 0])
+      difference() {
+        xy_center_cube(x_tags);
+        translate([0, 0, -0.1]) xy_center_cube([length - 1, x_tags[1] + 0.5, x_tags[2] + 0.2]);
+      }
+  }
+
 }
