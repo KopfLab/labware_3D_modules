@@ -66,6 +66,23 @@ module LCD(type = "16x2", location = [0,0,0]) {
           translate([0, 0, -z_plus])
           resize([0, 0, lcd_size[2] + 2*z_plus])
           xy_center_cube(lcd_size);
+
+        // backlighting cutout
+        if (type_idx == 0) {
+          backlight = [5, 13.5, 4.75];
+          translate(lcd_offset)
+            translate([-lcd_size[0]/2 - backlight[0]/2, 0, lcd_size[2] - backlight[2]])
+            xy_center_cube([backlight[0] + 2 * z_plus, backlight[1], backlight[2]]);
+        }
+
+        // pins cutout
+        if (type_idx == 0) {
+          pins = [41, 4.0, 5.0];
+          offset = 2.75;
+          translate(lcd_offset)
+            translate([lcd_size[0]/2 - pins[0]/2 - offset, lcd_size[1]/2 + pins[1]/2 + 3, lcd_size[2] - pins[2] + z_plus])
+            xy_center_cube(pins);
+        }
       }
     }
   }
