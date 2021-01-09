@@ -119,7 +119,7 @@ union() {
   length = 241.5;
   base = 0;
   depth = 5;
-  dia = 27.5 + 0.5; // enough tolerance for easy use
+  dia = 27.5 + 1.0; // enough tolerance for easy use
   vial_holder(
     holder_base = base, well_depth = depth, well_diameter = dia,
     well_distance_rows = dia + 3.5, well_distance_cols = dia + 5.75,
@@ -139,7 +139,7 @@ union() {
   }
 
   // y tags
-  y_tags = [3.5, width + 6, 3.3];
+  y_tags = [3.4, width + 6, 3.0];
   for (x = [-1, 1]) {
     for (y = [-1, 1]) {
       translate([x * (79-2.1) + y * 41.25/2, 0, 0])
@@ -151,7 +151,7 @@ union() {
   }
 
   // x tags
-  x_tags = [length + 6, 3.5, 3.3];
+  x_tags = [length + 6, 3.4, 3.0];
   for (y = [-1, 1]) {
     translate([0, y * 26.5, 0])
       difference() {
