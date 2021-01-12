@@ -9,7 +9,8 @@ function get_screw(name) =
     ["4-40", 2.9, [5.3, 4.5]],
     ["M4", 4, [8, 5.5]], // NOTE: counter sink dimensions not confirmed
     ["M5", 5, [10, 6.5]], // NOTE: counter sink dimensions not confirmed
-    ["1/4-20", 6.35, [13.50, 4.09]] // NOTE: dimensions from mcmaster carr https://www.mcmaster.com/#92210a537/=1did9kw
+    ["1/4-20", 6.35, [13.50, 4.09]], // NOTE: dimensions from mcmaster carr https://www.mcmaster.com/#92210a537/=1did9kw
+    ["10-24", 4.83, [10.44, 3.23]] // NOTE: dimensions from mcmaster carr https://www.mcmaster.com/92210A244/
   ])
   screws[search([name], screws)[0]];
 
