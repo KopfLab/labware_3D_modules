@@ -2,7 +2,7 @@ use <box.scad>;
 use <lcd.scad>;
 use <panel_mounts.scad>;
 
-show = true;
+show = false;
 thickness = 4;
 size = [120, 80, 80];
 
