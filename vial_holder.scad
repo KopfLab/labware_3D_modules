@@ -1,4 +1,3 @@
-// balch tube tower for optimizing culturing space in the incubator
 use <utils.scad>;
 use <screws.scad>;
 
