@@ -5,7 +5,7 @@ use <screws.scad>;
 e = 0.01; // small extra for removing artifacts during differencing
 2e= 0.02; // twice epsilon for extra length when translating by -e
 $fn=60; // number of vertices when rendering cylinders
-$render_threads=false; // turning thread rendering on/off
+$render_threads=true; // turning thread rendering on/off
 
 // holder for extraction vials
 // @param positions number of positions
@@ -13,7 +13,7 @@ $render_threads=false; // turning thread rendering on/off
 // @param spacing center-to-center spacing
 // @param fixed_length if provided, fixes the overall length for the holder
 // @param ledge if provided, includes a ledge (thickness/2) of this width for the vials
-module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, ledge = 0, thickness = 4, lip_thickness = 2, lip_height = 4, edge_gap = 3, supports_gap = 5, window = true) {
+module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, ledge = 0, thickness = 4, lip_thickness = 2, lip_height = 0, edge_gap = 3, supports_gap = 5, window = true) {
 
     // dimensions
     length = positions * spacing;
@@ -94,11 +94,11 @@ module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, le
 }
 
 // which one to render (useful if $render_threads is on)
-render_type = "all";
+render_type = "GC";
 
 // spacing for whole set
 spacing = 36.0;
-positions = 2;
+positions = 6;
 fixed_length = 35 * positions;
 y_spacing = 25;
 
@@ -177,16 +177,22 @@ if (render_type == "GC" || render_type == "all") {
 
 // pasteur pipette holder
 if (render_type == "pasteur" || render_type == "all") {
-  color("yellow")
+  /*color("yellow")
   translate([0, 0, 6.5 * y_spacing])
-  //translate([50, 9, 0])
   extraction_vial_holder(
     positions = positions * 2 - 1,
-    diameter = 7.0 + 0.8, // tolerance for nylon print
+    diameter = 4.0, // resting holder for pasteur pipette
     spacing = spacing/2,
-    fixed_length = fixed_length,
-    ledge = 1.5,
-    lip_height = 16,
-    window = false
+    fixed_length = fixed_length
+  );
+  */
+
+  color("yellow")
+  translate([0, 0, 7.5 * y_spacing])
+  extraction_vial_holder(
+    positions = positions * 2 - 1,
+    diameter = 7.0 + 0.8, // actual hole for pasteur pipette
+    spacing = spacing/2,
+    fixed_length = fixed_length
   );
 }
