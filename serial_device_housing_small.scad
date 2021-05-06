@@ -2,25 +2,33 @@ use <box.scad>;
 use <lcd.scad>;
 use <panel_mounts.scad>;
 
-show = true;
+show = false;
 thickness = 5;
 size = [100, 60, 50];
 
+
 // back panel with only DB9 serial port
+translate([120, 00, 0])
 color("gray")
 photon_board(thickness = thickness, location = [9, 0, 0], with_RJ45 = false, show = show)
 DB9_serial_port(thickness = thickness, location = [-32, 0, 0], rotation = [0, 0, 90], show = show)
 box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 
-// back panel with DB9 serial port and RJ45/RJ50 port
+// back panel with only RJ45/RJ50 port
 translate([-120, 00, 0])
+color("purple")
+photon_board(thickness = thickness, location = [9, 0, 0], with_RJ45 = true, show = show)
+box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
+
+// back panel with DB9 serial port and RJ45/RJ50 port
+translate([240, 00, 0])
 color("yellow")
-photon_board(thickness = thickness, location = [9, 0, 0], with_RJ45 = false, show = show)
+photon_board(thickness = thickness, location = [9, 0, 0], with_RJ45 = true, show = show)
 DB9_serial_port(thickness = thickness, location = [-32, 0, 0], rotation = [0, 0, 90], show = show)
 box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
 
 // back panel with 6p4c RJ11 (telephone cable) port and RJ45/RJ50 port
-translate([120, 00, 0])
+translate([-240, 00, 0])
 color("blue")
 photon_board(thickness = thickness, location = [9, 0, 0], with_RJ45 = true, show = show)
 RJ11_port(thickness = thickness, location = [-34.5, 0, 0], rotation = [0, 0, 90], show = show)
