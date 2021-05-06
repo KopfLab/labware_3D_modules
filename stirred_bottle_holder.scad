@@ -6,13 +6,15 @@ use <screws.scad>;
 e = 0.01; // small extra for removing artifacts during differencing
 2e= 0.02; // twice epsilon for extra length when translating by -e
 $fn=60; // number of vertices when rendering cylinders
-$render_threads=true; // turning thread rendering on/off (renders very slowly if true)
+$render_threads=false; // turning thread rendering on/off (renders very slowly if true)
 
 // generate stirred bottle holder
 // @param vial_diameter diameter of the vial/bottle
 // @param base_height height of the base (must be at least 13 to clear the cutouts)
+// @param bottom_thickness thickness of the base
+// @param stirrer_hole_diameter diameter of the stirrer hole
 // @param adapter_height height of the adapter top (make 0 to remove adapter top)
-module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
+module stirred_bottle_holder(vial_diameter, base_height, bottom_thickness = 4, stirrer_hole_diameter = 25, adapter_height = 10) {
 
   echo(str("INFO: rendering stirred bottle holder for ", vial_diameter, "mm tubes..."));
 
@@ -22,9 +24,6 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 
   stand_feet = [12, 12, 6]; // length, width, height of support feet
   stand_feet_support = 8; // height of support for the stand feet
-
-  bottom_thickness = 4.5; // thickness of the bottom
-  bottom_diameter = 30; // diameter of hole on bottom
 
   stepper_width = 42; // +/- 0.1
   attachment_screw_depth = 5;
@@ -78,7 +77,7 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
     translate([0, 0, bottom_thickness])
       cylinder(h = base_height + adapter_height + 2e, d = vial_diameter);
       translate([0, 0, -e])
-        cylinder(h = base_height + adapter_height + 2e, d = bottom_diameter);
+        cylinder(h = base_height + adapter_height + 2e, d = stirrer_hole_diameter);
 
     // motor adapter screws
     for (x = [-1, 1]) {
@@ -102,4 +101,36 @@ module stirred_bottle_holder(vial_diameter, base_height, adapter_height = 10) {
 // stirred bottle holder for 100ml bottles
 // may not render in SCAD GUI, to render by command line (may still take a while), run:
 // openscad -o stirred_bottle_holder_100mL.stl stirred_bottle_holder.scad
-stirred_bottle_holder(vial_diameter = 56, base_height = 20);
+
+// FINAL green stirred bottle holders (a tiny bit more tolerance)
+color("green") stirred_bottle_holder(vial_diameter = 56.1, base_height = 20);
+
+// blue stirred bottle holders
+//color("blue") stirred_bottle_holder(vial_diameter = 56, base_height = 20);
+
+// white stirred bottle holders (adjusted for bigger bottles - too big!)
+//color("white") stirred_bottle_holder(vial_diameter = 57, base_height = 20);
+
+// magned holder for the stepper stirrer
+// design inspired by flexostat
+// @param holder_height total thickness of the magnet holder
+module stirrer_magnet_holder(holder_height = 10.0, shaft_diameter = 3.3) {
+
+  holder_diameter = 21.0;
+  magnet_diameter = 6.5;
+  magnet_height = 3.2;
+  magnet_offset = 5.8;
+  shaft_height = holder_height - 2.0;
+
+  difference() {
+    cylinder(h = holder_height, d = holder_diameter);
+    for (x = [-1, 1]) {
+      translate([x * magnet_offset, 0, holder_height - magnet_height])
+        cylinder(h = magnet_height + e, d = magnet_diameter);
+    }
+    translate([0, 0, -e])
+      cylinder(h = shaft_height + e, d = shaft_diameter);
+  }
+}
+
+// stirrer_magnet_holder(10, 3.3);
