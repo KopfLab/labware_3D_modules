@@ -53,88 +53,6 @@ module show_block (block, location, rotation, show = false) {
   }
 }
 
-// ATTACHMENTS //
-
-// standard particle photon holder board cutout
-// NOTE: the power part does not behave well with rotations
-module photon_board(thickness, location = [0,0,0], rotation = [0,0,0], with_RJ45 = true, show = false) {
-  screws = ["M3", 28, 16.5, 0.2];
-  board = [64, 42, 1.6, 10];
-  power = [3, 7, board[2]];
-  rj45 = [15.5, 16, 16];
-  // fixme: locations only support normal 90 rotation at the moment (do the math properly)
-  power_location = rotation[2] == 90 ? [0, board[0]/2 + power[0]/2, thickness + board[3]] : [board[0]/2 + power[0]/2, 0, thickness + board[3]];
-  rj45_location = rotation[2] == 90 ? [board[1]/2 - rj45[1]/2 + 0.8, -board[0]/2 + rj45[0]/2 + 8.1, 0] : [-board[0]/2 + rj45[0]/2 + 8.1, -board[1]/2 + rj45[1]/2 - 0.8, 0];
-
-  // arrangment
-  if (with_RJ45) {
-    panel_attachment(thickness, screws, board, location, rotation, show)
-    show_block(power, location + power_location, rotation, show)
-    panel_cut_out(thickness = thickness, cutout = rj45, location + rj45_location, rotation = rotation, show = show)
-    children(0);
-  } else {
-    panel_attachment(thickness, screws, board, location, rotation, show)
-    show_block(power, location + power_location, rotation, show)
-    children(0);
-  }
-
-}
-
-// particle board
-translate([-80, 80, 0])
-photon_board(thickness = 5, show = true) xy_center_cube([80, 60, 5]);
-
-
-// 85-240V AC to 5V 1A DC converter, enclosed (from DigiKey)
-// https://www.digikey.com/products/en?keywords=102-2656-ND
-module AC_DC_converter(thickness, location = [0,0,0], rotation = [0,0,0], show = false){
-  screws = ["M3", 30.8, 11.5, 0.2];
-  board = [76, 31.5, 23.96, 0];
-  panel_attachment(thickness, screws, board, location, rotation, show)
-  children(0);
-}
-
-// AC DC converter
-translate([80, 80, 0])
-AC_DC_converter(thickness = 5, show = true) xy_center_cube([100, 60, 5]);
-
-
-// auber 25A solid state relay
-// http://www.auberins.com/index.php?main_page=product_info&products_id=9
-module relay(thickness, location = [0,0,0], rotation=[0,0,0], show = false) {
-  screws = ["M4", 23.8, 0, 0.2];
-  relay = [58, 44, 32, 0];
-  panel_attachment(thickness, screws, relay, location, rotation, show)
-  children(0);
-}
-
-// relay
-translate([80, -100, 0]) color("green")
-relay(thickness = 5, show = true) xy_center_cube([100, 80, 5]);
-
-
-// auber solid 25A state relay with externally mounted heatsink
-// relay: http://www.auberins.com/index.php?main_page=product_info&products_id=9
-// heat sink: http://www.auberins.com/index.php?main_page=product_info&cPath=2_48&products_id=244
-module relay_sink(thickness, location = [0,0,0], rotation=[0,0,0], show = false) {
-  z_plus = 0.1; // how much thicker to make cutouts in z
-  relay = [58, 44, 32, 0];
-  cutout = [70, 55];
-  screws = ["M4", 45, 39.75, 0.2];
-  heat_sink = [100, 90, 30, -thickness];
-  show_block (relay, location, rotation, show)
-  panel_attachment(thickness, screws, heat_sink, location- [0, 0, heat_sink[2]], rotation, show)
-  difference() {
-    children(0);
-    translate(location) rotate(rotation)
-      translate([0, 0, -z_plus]) xy_center_cube([cutout[0], cutout[1], thickness+2*z_plus]);
-  }
-}
-
-// relay sink
-translate([-80, -100, 0]) color("green")
-relay_sink(thickness = 5, show = true) xy_center_cube([120, 100, 5]);
-
 // standard snap-in cutout for a panel
 // @param thickness how thick base board is
 // @param block dimensions of snap in cutout (length, width, thickness)
@@ -203,6 +121,7 @@ module panel_screw_in (thickness, cutout, face, screws, location = [0,0,0], rota
 // @param show whether to show cube (not intended for printing)
 // @param tolerance how much tolerance to add to the snap in cutout
 module panel_cut_out (thickness, cutout, location = [0,0,0], rotation = [0,0,0], x_round = false, y_round = false, show = false, tolerance = 0.15) {
+  echo("panel cutout: ", cutout, " at location: ", location);
   difference() {
     show_block (cutout + [2*tolerance, 2*tolerance, 0], location, rotation, show)
     children(0);
@@ -222,6 +141,89 @@ module panel_cut_out (thickness, cutout, location = [0,0,0], rotation = [0,0,0],
     };
   }
 }
+
+// ATTACHMENTS //
+
+// standard particle photon holder board cutout
+// NOTE: the power part does not behave well with rotations
+// @param with_RJ45 whether to include a cutout for the RJ45 ethernet plug (also RJ50 compatible)
+module photon_board(thickness, location = [0,0,0], rotation = [0,0,0], with_RJ45 = true, show = false) {
+  screws = ["M3", 28, 16.5, 0.2];
+  board = [64, 42, 1.6, 10];
+  power = [3, 7, board[2]];
+  rj45 = [15.5, 16.5, 16];
+  // fixme: locations only support normal 90 rotation at the moment (do the math properly)
+  power_location = rotation[2] == 90 ? [0, board[0]/2 + power[0]/2, thickness + board[3]] : [board[0]/2 + power[0]/2, 0, thickness + board[3]];
+  rj45_location = rotation[2] == 90 ? [board[1]/2 - rj45[1]/2 + 0.8, -board[0]/2 + rj45[0]/2 + 8.1, 0] : [-board[0]/2 + rj45[0]/2 + 8.1, -board[1]/2 + rj45[1]/2 - 0.8, 0];
+
+  // arrangment
+  if (with_RJ45) {
+    panel_attachment(thickness, screws, board, location, rotation, show)
+    show_block(power, location + power_location, rotation, show)
+    panel_cut_out(thickness = thickness, cutout = rj45, location = location + rj45_location, rotation = rotation, show = show)
+    children(0);
+  } else {
+    panel_attachment(thickness, screws, board, location, rotation, show)
+    show_block(power, location + power_location, rotation, show)
+    children(0);
+  }
+
+}
+
+// particle board
+translate([-80, 80, 0])
+photon_board(thickness = 5, show = true) xy_center_cube([80, 60, 5]);
+
+
+// 85-240V AC to 5V 1A DC converter, enclosed (from DigiKey)
+// https://www.digikey.com/products/en?keywords=102-2656-ND
+module AC_DC_converter(thickness, location = [0,0,0], rotation = [0,0,0], show = false){
+  screws = ["M3", 30.8, 11.5, 0.2];
+  board = [76, 31.5, 23.96, 0];
+  panel_attachment(thickness, screws, board, location, rotation, show)
+  children(0);
+}
+
+// AC DC converter
+translate([80, 80, 0])
+AC_DC_converter(thickness = 5, show = true) xy_center_cube([100, 60, 5]);
+
+
+// auber 25A solid state relay
+// http://www.auberins.com/index.php?main_page=product_info&products_id=9
+module relay(thickness, location = [0,0,0], rotation=[0,0,0], show = false) {
+  screws = ["M4", 23.8, 0, 0.2];
+  relay = [58, 44, 32, 0];
+  panel_attachment(thickness, screws, relay, location, rotation, show)
+  children(0);
+}
+
+// relay
+translate([80, -100, 0]) color("green")
+relay(thickness = 5, show = true) xy_center_cube([100, 80, 5]);
+
+
+// auber solid 25A state relay with externally mounted heatsink
+// relay: http://www.auberins.com/index.php?main_page=product_info&products_id=9
+// heat sink: http://www.auberins.com/index.php?main_page=product_info&cPath=2_48&products_id=244
+module relay_sink(thickness, location = [0,0,0], rotation=[0,0,0], show = false) {
+  z_plus = 0.1; // how much thicker to make cutouts in z
+  relay = [58, 44, 32, 0];
+  cutout = [70, 55];
+  screws = ["M4", 45, 39.75, 0.2];
+  heat_sink = [100, 90, 30, -thickness];
+  show_block (relay, location, rotation, show)
+  panel_attachment(thickness, screws, heat_sink, location- [0, 0, heat_sink[2]], rotation, show)
+  difference() {
+    children(0);
+    translate(location) rotate(rotation)
+      translate([0, 0, -z_plus]) xy_center_cube([cutout[0], cutout[1], thickness+2*z_plus]);
+  }
+}
+
+// relay sink
+translate([-80, -100, 0]) color("green")
+relay_sink(thickness = 5, show = true) xy_center_cube([120, 100, 5]);
 
 // schurter AC power module with fuse and scwitch (rated for 10A)
 // https://www.digikey.com/products/en?keywords=%09486-1965-ND
