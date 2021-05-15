@@ -22,7 +22,7 @@ function get_screw(name) =
 // @param stretch how much to stretch (in mm) the radius in the x direction (to account for collapse in vertical printing), added on top of the tolerance
 // @param z_plus how much thicker to make shape in z (for cutouts)
 // @param fn $fn parameter
-module machine_screw (name, length, countersink = true, tolerance = 0.15, stretch = 0, z_plus = 0, fn = 30) {
+module machine_screw (name, length, countersink = true, invert_countersink = false, tolerance = 0.15, stretch = 0, z_plus = 0, fn = 30) {
   // parameters
   screw = get_screw(name);
   screw_d = screw[1]; // diameter
@@ -35,7 +35,12 @@ module machine_screw (name, length, countersink = true, tolerance = 0.15, stretc
     translate([0, 0, -z_plus])
       resize([screw_d+2*tolerance+2*stretch, 0, 0])
         cylinder(h=length+2*z_plus, d=screw_d+2*tolerance, center=false, $fn=fn);
-    if (countersink) {
+    if (countersink && invert_countersink) {
+      translate([0, 0, length -z_plus])
+        rotate([180, 0, 0])
+        resize([screw_cs[0]+2*stretch, 0, 0])
+          cylinder(h=screw_cs[1], d1=screw_cs[0], d2=0, center=false, $fn=fn);
+    } else if (countersink) {
       translate([0, 0, -z_plus])
         resize([screw_cs[0]+2*stretch, 0, 0])
           cylinder(h=screw_cs[1], d1=screw_cs[0], d2=0, center=false, $fn=fn);
@@ -86,15 +91,24 @@ function get_hexnut(name) =
 // @param name which hexnut
 // @param tolerance what tolerance to add (in mm) to the screw radius
 // @param stretch how much to stretch (in mm) the radius in the x direction (to account for collapse in vertical printing), added on top of the tolerance
+// @param whether to add a slot for the hexnut (provide in mm total length), default is 0 (i.e. no slot)
 // @param z_plus how much thicker to make shape in z (for cutouts)
 // @param align whether to align the hexnut to the "bottom" (default), "center" or "top" of the current location (not the bottom)
-module hexnut (name, tolerance = 0.025, stretch = 0, z_plus = 0, screw_hole = true, align = "bottom") {
+module hexnut (name, tolerance = 0.025, stretch = 0, slot = 0, z_plus = 0, screw_hole = true, align = "bottom") {
   nut = get_hexnut(name);
-  nut_d = nut[1]/cos(180/6)+2*tolerance; // diameter
+  nut_w = nut[1] + 2 * tolerance;
+  nut_d = nut_w/cos(180/6); // diameter
   nut_h = nut[2]+2*z_plus; // thickness
   move_z = (align == "top") ? [0, 0, -nut[2]] : ((align == "center") ? [0, 0, -nut[2]/2] : [0, 0, 0]);
   translate([0, 0, -z_plus])
-    // apply stretch to whole shape
+  union() {
+    // whether to include a slot for the nut
+    if (abs(slot) > 0) {
+      translate(move_z)
+      translate([-abs(slot)/2 + slot/2, -nut_w/2, 0])
+      cube([abs(slot), nut_w, nut_h], center=false);
+    }
+    // apply stretch to whole nut shape
     resize([nut_d+2*stretch, 0, 0])
       difference() {
         translate(move_z) cylinder(h=nut_h, d=nut_d, center=false, $fn=6);
@@ -103,6 +117,7 @@ module hexnut (name, tolerance = 0.025, stretch = 0, z_plus = 0, screw_hole = tr
           translate(move_z) machine_screw(name, nut_h, z_plus = 0.1, countersink = false);
         }
       }
+  }
 }
 
 // examples
