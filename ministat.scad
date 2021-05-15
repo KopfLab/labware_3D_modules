@@ -1,6 +1,7 @@
 
 use <utils.scad>;
 use <screws.scad>;
+use <attachments.scad>;
 
 // constants
 e = 0.01; // small extra for removing artifacts during differencing
@@ -134,46 +135,115 @@ module stirrer_magnet_holder(holder_height = 10.0, shaft_diameter = 3.3) {
   }
 }
 
-// generate ring for the light sensors
+/*** light sensor ring ***/
+
+// get OPT dimensions
+function get_opt_dimensions() = [10.5, 10, 4.8]; // width, height, depth
+
+// generate sensor block
+// @param tunnel_dia (photodiode area cross section ~ 3.35mm)
+module sensor_block(depth = 13, tunnel_dia = 4, tolerance = 0) {
+  opt = get_opt_dimensions();
+  walls = 3;
+  block = [35, 14, depth]; // width x height x depth
+  screw_depth = 16.5 - opt[2] - walls - 1.7; // comfort for 14mm screw, PCB is the 1.7mm
+  difference() {
+    // attachment block
+    attachment_block(block = block, walls = walls, bottom_rail = false, center = opt[0] + 2 * walls, screw_depth = screw_depth, screws_tolerance = tolerance);
+    // light tunnel
+    translate([0, 0, -e])
+    cylinder(h = depth + 2e, d = tunnel_dia);
+  }
+}
+
+// generate sensor holder
+module sensor_holder(tunnel_dia = 2, tolerance = 0) {
+  opt = get_opt_dimensions();
+  walls = 3;
+  block = [35, 14, opt[2] + walls];
+  difference() {
+    // attachment
+    attachment(block = block, walls = walls, bottom_rail = false, center = opt[0] + 2 * walls, screws_tolerance = tolerance);
+    // opt cutout
+    translate([0, 0, walls])
+    xy_center_cube([opt[0], opt[1], opt[2] + e]);
+    // light tunnel
+    translate([0, 0, -e])
+    cylinder(h = block[2] + 2e, d = tunnel_dia);
+  }
+}
+
+// generate led block
+// @param tunnel_dia (photodiode area cross section ~ 3.35mm)
+module led_block(depth = 15, tunnel_dia = 4, tolerance = 0) {
+  block = [30, 14, depth]; // width x height x depth
+  walls = 3;
+  screw_depth = 16.5 - 7.0 - 1.7; // comfort for 16mm screw, PCB is the 1.7mm
+  difference() {
+    // attachment block
+    attachment_block(block = block, walls = walls, bottom_rail = false, center = 10, screw_depth = screw_depth, screws_tolerance = tolerance);
+    // light tunnel
+    translate([0, 0, -e])
+    cylinder(h = depth + 2e, d = tunnel_dia);
+  }
+}
+
+// generate led holder
+module led_holder(tolerance = 0) {
+  led_diameter = 4.7; // +/- 0. 2
+  ledge_diameter = 5.4; // +/- 0.2
+  ledge_thickness = 0.6; // no error estimate
+  error_range = 0.2;
+  guide_pin = [1, 1, ledge_thickness]; // guide pin width, length and thickness
+  walls = 3;
+  depth = 7.0; // led is only 4.8 +/- 0.2 but better to have a slightly thicker holder
+  block = [30, 14, depth]; // width x height x depth
+  difference() {
+    // attachment
+    attachment(block = block, walls = 3, bottom_rail = false, center = 10, screws_tolerance = tolerance);
+    // led
+    translate([0, 0, -e])
+    cylinder(h = block[2] + 2e, d = led_diameter + error_range + tolerance);
+    // this doesn't really print well
+    if (false) { // FIXME
+      // ledge
+      rotate([0, 0, -135])
+      translate([0, 0, block[2] - ledge_thickness])
+      union() {
+        cylinder(h = ledge_thickness + e, d = ledge_diameter + error_range + 2 * tolerance);
+        translate([(ledge_diameter + error_range + guide_pin[0])/2, 0, 0])
+        xy_center_cube([guide_pin[0] + error_range + tolerance, guide_pin[1] + error_range + tolerance, guide_pin[2] + e]);
+      }
+    }
+  }
+}
+
+// generate whole ring for the light sensors
 // @param vial_diameter diameter of the vial/bottle
 // @param base_height height of the base (must be at least 13 to clear the cutouts)
 // @param adapter_height height of the adapter top (make 0 to remove adapter top)
-module light_sensor_ring(vial_diameter, base_height = 13, adapter_height = 10) {
+module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10) {
 
   echo(str("INFO: rendering light sensor ring for ", vial_diameter, "mm tubes..."));
 
+  // ring
   holder_wall = 8;  // thickness of the holder wall around the vial
   adapter_rim = 4; // thickness of the adapter rim
   adapter_slot_width = 10; // standard width of the attachment slot
   vial_cutout_extra = 0.4; // slightly larger cutout for easier fit
   total_diameter = vial_diameter + 2 * holder_wall; // total diameter
 
-  opt_board_cutout = [16.1, 1.7, 11]; // cutout for OPT board
-  opt_cutout = [10.0, 4.8, opt_board_cutout[2]]; // cutout for OPT chip
-  opt_pin_depth = 2; // space to leave for the OPT pins behind the board
-
+  // sensors
   light_tunnel_diameter = 4; // photodiode area cross section ~ 3.35mm
-  light_tunnel_opt_base_offset = 5.5; // center of sensor from base of sensor cutout
-  light_tunnel_length_to_main_sensor = 4; // how far from tunnel wall is sensor located
-  light_tunnel_length_to_side_sensor = 8; // how far from glass is the side sensor?
-  light_tunnel_length_to_glass = 15; // how far from tunnel wall is cover glass located
-  light_tunnel_length_to_led = 5; // how far from glass is led
-
-  cover_slip = [12.4, 12.4, .3]; // dimensions of cover slip
-
-  led_diameter = 4.9; // includes tolerance
-  led_height = 5.0; // total Led height
-  led_back_diameter = 5.6; // back plate diameter
-  led_back_height = 0.7; // back plate thickness
-  led_pin_depth = 2; // space to leave for LED pins
-  led_guide = [1, 1, led_back_height]; // guide pin width, length and thickness
-  led_max_diameter = led_back_diameter + 2 * led_guide[1];
-
-  base_right = [light_tunnel_length_to_glass + light_tunnel_length_to_led + led_height + led_pin_depth - 2e + 5, 26, base_height];
-  base_right_location = [vial_diameter/2 + base_right[0]/2 - 5, -6, 0];
-  base_left = [15, 20, base_height];
-  base_left_location = [-vial_diameter/2 - base_left[0]/2, 0, 0];
-  light_tunnel_z = base_height - opt_cutout[2] + light_tunnel_opt_base_offset;
+  nylon_tol = 0.1; // extra tolerance for nylon parts shrinkage
+  cover_slip = [16, 12, 0.45];
+  cover_slip_access = 10;
+  beam_sensor_block_depth = 24;
+  ref_sensor_block_depth = 13.5;
+  ref_sensor_block_y = -28.5;
+  led_block_depth = 13.5;
+  ref_led_block_x = 9;
+  ref_ring_connector = 10;
 
   difference() {
     union() {
@@ -187,78 +257,55 @@ module light_sensor_ring(vial_diameter, base_height = 13, adapter_height = 10) {
         adapter_slot_width =  adapter_slot_width - 0.2 // minus tolerance for good fit
       );
 
-      // base right
-      translate(base_right_location) xy_center_cube(base_right);
+      // beam sensor block
+      translate([-total_diameter/2 - beam_sensor_block_depth/2, 0, 7])
+      rotate([-90, 0, -90])
+      sensor_block(depth = beam_sensor_block_depth, tunnel_dia = light_tunnel_diameter, tolerance = nylon_tol);
 
-      // base left
-      translate(base_left_location) xy_center_cube(base_left);
+      // ref sensor block
+      translate([total_diameter/2 + ref_led_block_x, ref_sensor_block_y, 7])
+      rotate([-90, 0, 0])
+      sensor_block(depth = ref_sensor_block_depth, tunnel_dia = light_tunnel_diameter, tolerance = nylon_tol);
+
+      // led block
+      translate([total_diameter/2 + ref_led_block_x + 17.5, 0, 7])
+      rotate([-90, 0, 90])
+      led_block(depth = led_block_depth, tunnel_dia = light_tunnel_diameter, tolerance = nylon_tol);
+
+      // ref-led block connector
+      translate([total_diameter/2 + ref_led_block_x - led_block_depth/2, 0, 0])
+      xy_center_cube([35-led_block_depth, 30, base_height]);
+
+      // ref-ring connector
+      translate([total_diameter/2 - ref_led_block_x - ref_ring_connector/2 + 1, ref_sensor_block_y + ref_ring_connector/2, 0])
+      xy_center_cube([ref_ring_connector, ref_ring_connector, base_height]);
     }
-
-    // LED cutout
-    color("green")
-    scale([1,1,1.03]) // 3% z-stretch
-    translate([vial_diameter/2 + light_tunnel_length_to_glass + light_tunnel_length_to_led + led_height, -e, light_tunnel_z])
-    rotate([0, -90, 0])
-    translate([0, 0, -led_pin_depth])
-    union() {
-      difference() {
-        cylinder(h = led_guide[2] + led_pin_depth, d = led_max_diameter);
-        for (x = [-1, 1]) {
-          translate([led_max_diameter/2, x * (led_max_diameter/2 + led_guide[0]/2 + e), - e])
-              xy_center_cube([led_max_diameter, led_max_diameter, led_pin_depth + e]);
-        }
-        translate([-led_max_diameter/2 + e, 0, -e])
-            xy_center_cube([led_max_diameter, led_max_diameter, led_guide[2] + led_pin_depth + 2e]);
-      }
-      cylinder(h = led_pin_depth + led_back_height, d = led_back_diameter);
-      cylinder(h = led_height + led_pin_depth, d = led_diameter);
-      // set screw
-      for (x = [0, -120]) {
-        translate([0, 0, led_pin_depth + led_height/2]) rotate([x, 90, 0])
-        threaded_machine_screw(name = "M3", length = 20 + 2e);
-      }
-    }
-    // cover slip cutout
-    translate([vial_diameter/2 + light_tunnel_length_to_glass, 0, base_height - opt_cutout[2]])
-      rotate([0, 0, -45])
-      xy_center_cube([cover_slip[2], cover_slip[1], opt_cutout[2] + 2e]);
-
-    // light tunnels (do they need distortion?)
-    //// main
-    translate([-(vial_diameter + base_left[0] + base_right[0])/2 - e, 0, light_tunnel_z])
-      rotate([0, 90, 0])
-      cylinder(h = vial_diameter + base_right[0] + base_left[0] + 2e, d = light_tunnel_diameter);
-    //// side
-    translate([vial_diameter/2 + light_tunnel_length_to_glass, -e, light_tunnel_z])
-      rotate([90, 0, 0])
-      cylinder(h = base_right[1] + 2e, d = light_tunnel_diameter);
-
-    // opt & board cutout
-    //// main
-    translate([-vial_diameter/2 - light_tunnel_length_to_main_sensor, 0, base_height - opt_board_cutout[2]])
-    union() {
-      translate([-opt_cutout[1]/2, 0, opt_board_cutout[2] - opt_cutout[2]])
-        xy_center_cube([opt_cutout[1] + 2e, opt_cutout[0], opt_cutout[2] + 2e]);
-      translate([-opt_board_cutout[1]/2 - opt_cutout[1], 0, 0])
-        xy_center_cube([opt_board_cutout[1], opt_board_cutout[0], opt_board_cutout[2] + 2e]);
-      translate([-opt_pin_depth/2 - opt_cutout[1] - opt_board_cutout[1], 0, opt_board_cutout[2] - opt_cutout[2]])
-        xy_center_cube([opt_pin_depth + 2e, opt_cutout[0], opt_cutout[2] + 2e]);
-    };
-    //// side
-    translate([vial_diameter/2 + light_tunnel_length_to_glass, -light_tunnel_length_to_side_sensor, base_height - opt_board_cutout[2]])
-    rotate([0, 0, 90])
-    union() {
-      translate([-opt_cutout[1]/2, 0, opt_board_cutout[2] - opt_cutout[2]])
-        xy_center_cube([opt_cutout[1] + 2e, opt_cutout[0], opt_cutout[2] + 2e]);
-      translate([-opt_board_cutout[1]/2 - opt_cutout[1], 0, 0])
-        xy_center_cube([opt_board_cutout[1], opt_board_cutout[0], opt_board_cutout[2] + 2e]);
-      translate([-opt_pin_depth/2 - opt_cutout[1] - opt_board_cutout[1], 0, opt_board_cutout[2] - opt_cutout[2]])
-        xy_center_cube([opt_pin_depth + 2e, opt_cutout[0], opt_cutout[2] + 2e]);
-    };
 
     // center hole cutout (slightly bigger than stirred bottle holder base for easier fit)
     translate([0, 0, -e])
       cylinder(h = base_height + adapter_height + 2e, d = vial_diameter + vial_cutout_extra);
+
+    // cover slip cutout
+    translate([total_diameter/2 + ref_led_block_x, 0, 14 - cover_slip[1]/2 + e])
+    rotate([90, 0, 45])
+    translate([-2.5, 0, -cover_slip[2]/2])
+    xy_center_cube(cover_slip);
+
+    // cover slip access
+    translate([total_diameter/2 + ref_led_block_x, 0, 14])
+    rotate([90, 0, 45])
+    translate([-2.5, 0, -cover_slip_access/2])
+    cylinder(h = cover_slip_access, d = 5);
+
+    // ref light tunnel
+    translate([total_diameter/2 + ref_led_block_x, 0, 7])
+    rotate([90, 0, 0])
+    cylinder(h = 100, d = light_tunnel_diameter);
+
+    // main light tunnel
+    translate([total_diameter/2 + ref_led_block_x - 100, 0, 7])
+    rotate([0, 90, 0])
+    cylinder(h = 200, d = light_tunnel_diameter);
 
     // bottom adapter cutouts
     translate([0, 0, -e])
@@ -298,10 +345,5 @@ stirrer_magnet_holder(10, 3.3);
 
 // light sensor ring
 translate([0, 0, 40])
-!color("teal")
-light_sensor_ring(vial_diameter = 56.1);
-
-module distribution_board_holder() {
-
-}
-distribution_board_holder();
+color("teal")
+!light_sensor_ring(vial_diameter = 56.1);
