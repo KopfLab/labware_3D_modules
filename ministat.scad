@@ -218,6 +218,33 @@ module led_holder(tolerance = 0) {
   }
 }
 
+// distribution board holder
+// @param attachment_depth how much of an attachment bar is provided
+module distribution_board_holder (attachment_depth = 5) {
+  support = [10, 9, 8];
+  screws_location = 22.2;
+  solder_pins_depth = 4;
+  solder_pins_start = 3;
+  union() {
+    translate([0, -(attachment_depth + support[1])/2, 0])
+    xy_center_cube([support[0] + 2 * screws_location, attachment_depth, support[2]]);
+    for (x = [-1, 1]) {
+      translate([x * screws_location, 0, 0])
+      difference() {
+        xy_center_cube(support);
+        // solder pins
+        translate([x * (-solder_pins_start - 5/2), 0, support[2] - solder_pins_depth])
+        xy_center_cube([5, support[1] + e, solder_pins_depth + e]);
+        // screws
+        translate([0, 0, -e])
+        machine_screw(name = "M3", countersink=false, length = support[2] + 2e);
+        translate([0, 0, -e])
+        hexnut("M3", screw_hole = false, z_plus = 2e);
+      }
+    }
+  }
+}
+
 // generate whole ring for the light sensors
 // @param vial_diameter diameter of the vial/bottle
 // @param base_height height of the base (must be at least 13 to clear the cutouts)
@@ -234,7 +261,7 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10) {
   total_diameter = vial_diameter + 2 * holder_wall; // total diameter
 
   // sensors
-  light_tunnel_diameter = 4; // photodiode area cross section ~ 3.35mm
+  light_tunnel_diameter = 5; // photodiode area cross section ~ 3.35mm
   nylon_tol = 0.1; // extra tolerance for nylon parts shrinkage
   cover_slip = [16, 12, 0.45];
   cover_slip_access = 10;
@@ -279,6 +306,10 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10) {
       // ref-ring connector
       translate([total_diameter/2 - ref_led_block_x - ref_ring_connector/2 + 1, ref_sensor_block_y + ref_ring_connector/2, 0])
       xy_center_cube([ref_ring_connector, ref_ring_connector, base_height]);
+
+      // distribution board holder
+      translate([0, vial_diameter/2 + holder_wall + 4.5, 0])
+      distribution_board_holder(attachment_depth = 15);
     }
 
     // center hole cutout (slightly bigger than stirred bottle holder base for easier fit)
@@ -334,6 +365,7 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10) {
 // may not render in SCAD GUI, to render by command line (may still take a while), run:
 // openscad -o stirred_bottle_holder_100mL.stl stirred_bottle_holder.scad
 
+if (false) {
 // FINAL stirred bottle holders (a tiny bit more tolerance)
 color("green")
 stirred_bottle_holder(vial_diameter = 56.1, base_height = 20);
@@ -343,6 +375,7 @@ translate([0, 0, -6])
 color("pink")
 stirrer_magnet_holder(10, 3.3);
 
+}
 // light sensor ring
 translate([0, 0, 40])
 color("teal")
