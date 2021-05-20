@@ -50,7 +50,7 @@ module attachment_block(block, walls, screw_depth, bottom_rail = true, center = 
     }
     // small cut-away bottom rail for easier print if bottom_rail = false
     if (!bottom_rail) {
-      rail_thickness = 0.2;
+      rail_thickness = 0.25;
       translate([0, block[1]/2 - rail_thickness/2, 0])
       xy_center_cube([block[0], rail_thickness, rail_thickness]);
     }
