@@ -13,7 +13,7 @@ $fn=60; // number of vertices when rendering cylinders
 // @param center width of the center cutout (none by default), only matters if there is a bottom rail
 // @param rails_tolerance (extra gap for good fit)
 // @paran screws_tolerance extra tolerance for screws
-module attachment_block(block, walls, screw_depth, bottom_rail = true, center = 0, rails_tolerance = 0.4, screws_tolerance = 0) {
+module attachment_block(block, walls, screw_depth, side_rails = true, bottom_rail = true, center = 0, rails_tolerance = 0.4, screws_tolerance = 0) {
   screw_location = block[0]/2 - get_hexnut("M3")[1]/2 - 1.5 * walls;
   echo(str("INFO: attachment block ", block[0], "mm x ", block[1], "mm x ", block[2], "mm with screw locations +/- ", screw_location, "mm"));
   union() {
@@ -25,18 +25,20 @@ module attachment_block(block, walls, screw_depth, bottom_rail = true, center = 
         translate([0, 0, -e])
         xy_center_cube([center + 2 * rails_tolerance, block[1] + 2e, 2 * walls + e]);
       }
-      // front cutout
-      front = (bottom_rail) ?
-        [block[0] - 3 * walls + 2 * rails_tolerance, block[1] - 1.5 * walls + rails_tolerance + e, 2 * walls + e] :
-        [block[0] - 3 * walls + 2 * rails_tolerance, block[1] + 2e, 2 * walls + e];
-      translate([0, (front[1] - block[1] - e)/2, - e])
-      xy_center_cube(front);
-      // rails cutout
-      rails = (bottom_rail) ?
-        [block[0] - 2 * walls + 2 * rails_tolerance, block[1] - walls + rails_tolerance + e, walls + rails_tolerance]:
-        [block[0] - 2 * walls + 2 * rails_tolerance, block[1] + 2e, walls + rails_tolerance];
-      translate([0, (rails[1] - block[1] - e)/2, walls - rails_tolerance])
-      xy_center_cube(rails);
+      if (side_rails) {
+        // front cutout
+        front = (bottom_rail) ?
+          [block[0] - 3 * walls + 2 * rails_tolerance, block[1] - 1.5 * walls + rails_tolerance + e, 2 * walls + e] :
+          [block[0] - 3 * walls + 2 * rails_tolerance, block[1] + 2e, 2 * walls + e];
+        translate([0, (front[1] - block[1] - e)/2, - e])
+        xy_center_cube(front);
+        // rails cutout
+        rails = (bottom_rail) ?
+          [block[0] - 2 * walls + 2 * rails_tolerance, block[1] - walls + rails_tolerance + e, walls + rails_tolerance]:
+          [block[0] - 2 * walls + 2 * rails_tolerance, block[1] + 2e, walls + rails_tolerance];
+        translate([0, (rails[1] - block[1] - e)/2, walls - rails_tolerance])
+        xy_center_cube(rails);
+      }
       // hex nuts for attachment
       for(x = [-1, 1]) {
         translate([x * screw_location, 0, -e])
@@ -49,7 +51,7 @@ module attachment_block(block, walls, screw_depth, bottom_rail = true, center = 
       }
     }
     // small cut-away bottom rail for easier print if bottom_rail = false
-    if (!bottom_rail) {
+    if (side_rails && !bottom_rail) {
       rail_thickness = 0.25;
       translate([0, block[1]/2 - rail_thickness/2, 0])
       xy_center_cube([block[0], rail_thickness, rail_thickness]);

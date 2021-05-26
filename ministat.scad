@@ -139,8 +139,9 @@ module stirrer_magnet_holder(holder_height = 10.0, shaft_diameter = 3.3) {
 
 // get OPT dimensions
 function get_opt_dimensions() = [10.5, 10, 4.8]; // width, height, depth
-function get_main_light_tunnel_dimensions() = [1.0, 4.0]; // width, height
-function get_ref_light_tunnel_dimensions() = [3.0, 4.0]; // width, height
+function get_slit_light_tunnel_dimensions() = [0.75, 4.0]; // width, height
+function get_ref_light_tunnel_dimensions() = [2.2, 4.0]; // width, height
+function get_sensor_light_tunnel_dimensions() = [3.0, 4.0]; // width, height
 
 // generate sensor block
 // @param tunnel_dia (photodiode area cross section ~ 3.35mm)
@@ -148,17 +149,32 @@ module sensor_block(depth = 13, tunnel = [3,3], tolerance = 0) {
   opt = get_opt_dimensions();
   walls = 3;
   block = [35, 14, depth]; // width x height x depth
-  screw_depth = 16.5 - opt[2] - walls - 1.7; // comfort for 16mm screw, PCB is the 1.7mm
+  screw_depth = 16.5 - 1.7; // comfort for 16mm screw, PCB is the 1.7mm
   difference() {
-    // attachment block
-    attachment_block(block = block, walls = walls, bottom_rail = false, center = opt[0] + 2 * walls, screw_depth = screw_depth, screws_tolerance = tolerance);
+    // attachment block (for attachment rails, change to bottom_rail = true)
+    attachment_block(block = block, walls = walls, bottom_rail = false, side_rails = false, screw_depth = screw_depth, screws_tolerance = tolerance);
     // light tunnel
     rotate([0, 0, 90])
+    translate([0, 0, -e])
     light_tunnel([tunnel[1], tunnel[0], depth + 2e]);
+    // opt cutout
+    opt = get_opt_dimensions();
+    // FIXME: this could be improved how it's done
+    translate([0, 0, opt[2] - e])
+    rotate([0, 180, 180])
+    union() {
+      translate([0, 1 + opt[1]/2, 0])
+      difference() {
+        xy_center_cube([opt[0], 2, opt[2] + e]);
+        rotate([-10, 0, 0]) translate([0, 0.55, -3]) xy_center_cube([opt[0] + 2e, 3, 2 * opt[2]]);
+      }
+      xy_center_cube([opt[0], opt[1], opt[2] + e]);
+    }
   }
 }
 
 // generate sensor holder
+// FIXME: not used anymore?
 module sensor_holder(tunnel_dia = 5, tolerance = 0) {
   opt = get_opt_dimensions();
   walls = 3;
@@ -210,13 +226,13 @@ module led_holder(tolerance = 0) {
 module distribution_board_holder (attachment_depth = 5) {
   support = [10, 9, 8];
   screws_location = 22.2;
-  solder_pins_depth = 4;
+  solder_pins_depth = 3;
   solder_pins_start = 3;
   union() {
     translate([0, -(attachment_depth + support[1])/2, 0])
     xy_center_cube([support[0] + 2 * screws_location, attachment_depth, support[2]]);
     for (x = [-1, 1]) {
-      translate([x * screws_location, -1.5, 0])
+      translate([x * screws_location, -2, 0])
       difference() {
         xy_center_cube(support);
         // solder pins
@@ -226,9 +242,13 @@ module distribution_board_holder (attachment_depth = 5) {
         translate([0, 0, -e])
         machine_screw(name = "M3", countersink=false, length = support[2] + 2e);
         translate([0, 0, -e])
-        hexnut("M3", z_plus = 0.2, tolerance = 0.3, screw_hole = false, z_plus = 2e);
+        hexnut("M3", z_plus = 0.2, tolerance = 0.3, screw_hole = false);
       }
     }
+    // small cut-away bottom rail for easier print if bottom_rail = false
+    rail_thickness = 0.25;
+    translate([0, 2 + 1.5 * rail_thickness, 0])
+    xy_center_cube([support[0] + 2 * screws_location, rail_thickness, rail_thickness]);
   }
 }
 
@@ -273,10 +293,16 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10, e
   ref_led_block_x = 9;
   ref_ring_connector = 10;
 
+  main_tunnel = get_slit_light_tunnel_dimensions();
+  ref_led_connect = [35-led_block_depth, 30, 14];
+
   difference() {
     union() {
       // vial holder
-      //FIXME cylinder(h = base_height, d = total_diameter);
+      difference() {
+        cylinder(h = base_height, d = total_diameter);
+        translate([-total_diameter/2, 0, -e]) xy_center_cube([5, 30, base_height + 2e]);
+      }
 
       // top adapters
       if (top_adapters) {
@@ -287,10 +313,14 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10, e
         );
       }
 
+      // distribution board holder
+      translate([0, vial_diameter/2 + holder_wall + 4.5, 0])
+      distribution_board_holder(attachment_depth = 15);
+
       // beam sensor block
-      //FIXME translate([-total_diameter/2 - beam_sensor_block_depth/2, 0, 7])
-      //FIXME rotate([-90, 0, -90])
-      //FIXME sensor_block(depth = beam_sensor_block_depth, tunnel_dia = light_tunnel_diameter, tolerance = extra_tolerance);
+      translate([-total_diameter/2 - beam_sensor_block_depth/2, 0, 7])
+      rotate([-90, 0, -90])
+      sensor_block(depth = beam_sensor_block_depth, tunnel = get_sensor_light_tunnel_dimensions(), tolerance = extra_tolerance);
 
       // ref sensor block
       // with the 47 Ohm resistor on the LED and the 220kO resistor on the ref sensor, get a 3447 signal
@@ -303,10 +333,13 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10, e
       rotate([-90, 0, 90])
       led_block(depth = led_block_depth, tunnel = get_ref_light_tunnel_dimensions(), tolerance = extra_tolerance);
 
+      // ref-ring connector
+      translate([total_diameter/2 - ref_led_block_x - ref_ring_connector/2 + 1, ref_sensor_block_y + ref_ring_connector/2, 0])
+      xy_center_cube([ref_ring_connector, ref_ring_connector, base_height]);
+
       // ref-led block connector
       reveal = 0; // for debugging purposes
       flare_w = 9;
-      ref_led_connect = [35-led_block_depth, 30, 14];
       translate([total_diameter/2 + ref_led_block_x - led_block_depth/2, 0, 0])
       difference() {
         xy_center_cube([ref_led_connect[0], ref_led_connect[1], ref_led_connect[2] - reveal]);
@@ -330,7 +363,6 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10, e
 
         // main light tunnel
         end_path_length = ref_led_connect[0] - front_path_length - mid_path_length;
-        main_tunnel = get_main_light_tunnel_dimensions();
         translate([-ref_led_connect[0]/2 - e, 0, ref_led_connect[2]/2])
         rotate([0, 90, 0])
         light_tunnel([main_tunnel[1], main_tunnel[0], end_path_length + 2e]);
@@ -354,21 +386,26 @@ module light_sensor_ring(vial_diameter, base_height = 14, adapter_height = 10, e
     translate([0, 0, -e])
       cylinder(h = base_height + adapter_height + 2e, d = vial_diameter + vial_cutout_extra);
 
-    // light slit - FIXME - do we need this? probable for the other side of the ring
-    //translate([total_diameter/2 + ref_led_block_x - 100, 0, 7])
-    //rotate([0, 90, 0])
-    //cylinder(h = 200, d = light_tunnel_diameter);
-    //translate([0, 0, 7 - light_tunnel_diameter/2])
-    //xy_center_cube([total_diameter + 2e, light_slit_width, light_tunnel_diameter]);
+    // main light tunnel through ring
+    main_tunnel = get_slit_light_tunnel_dimensions();
+    translate([vial_diameter/2 + e, 0, ref_led_connect[2]/2])
+    rotate([0, 90, 0])
+    light_tunnel([main_tunnel[1], main_tunnel[0], holder_wall + 2e]);
+
+    // sensor light tunnel through ring
+    sensor_tunnel = get_sensor_light_tunnel_dimensions();
+    translate([-total_diameter/2 - e, 0, ref_led_connect[2]/2])
+    rotate([0, 90, 0])
+    light_tunnel([sensor_tunnel[1], sensor_tunnel[0], holder_wall + 2e]);
 
     // bottom adapter cutouts
-    //FIXME translate([0, 0, -e])
-    //FIXME ring_adapters(
-    //FIXME   vial_diameter = vial_diameter + 0.3, // plus tolerance for good fit
-    //FIXME   holder_wall = holder_wall,
-    //FIXME   adapter_height = adapter_height + 0.3, // plus tolerance for good fit
-    //FIXME   adapter_slot_width =  adapter_slot_width + 0.3 // plus tolerance for good fit
-    //FIXME );
+    translate([0, 0, -e])
+    ring_adapters(
+      vial_diameter = vial_diameter + 0.3, // plus tolerance for good fit
+      holder_wall = holder_wall,
+      adapter_height = adapter_height + 0.3, // plus tolerance for good fit
+      adapter_slot_width =  adapter_slot_width + 0.3 // plus tolerance for good fit
+    );
 
     // attachment screw holes
     for (x = [1, 2, 4, 5]) {
