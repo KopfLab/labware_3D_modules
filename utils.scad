@@ -8,6 +8,22 @@ module xy_center_cube (size) {
 
 xy_center_cube([40, 20, 4]);
 
+// rounded cube that can be flared
+module rounded_cube (size, round_left = true, round_right = true, scale_y = 1.0, scale_x = 1.0, z_center = false) {
+  move = (z_center) ? [0, 0, 0] : [0, 0, size[2]/2];
+  translate(move)
+  linear_extrude(height = size[2], center = true, convexity = 10, slices = 20, scale = [scale_x, scale_y])
+  union() {
+    rounds = (round_left && round_right) ? [-1, 1] : ((round_left) ? [-1] : ((round_right) ? [+1] : []));
+    nonrounds = (!round_left && !round_right) ? [-1, 1] : ((!round_left) ? [-1] : ((!round_right) ? [+1] : []));
+    for (x = rounds) translate([x * (size[0] - size[1])/2, 0]) circle(d = size[1]);
+    for (x = nonrounds) translate([x * (size[0] - size[1])/2, 0]) square(size[1], center = true);
+    square([size[0] - size[1], size[1]], center = true);
+  }
+}
+
+translate([0, 80, 0]) color("aqua")
+rounded_cube([30, 10, 20], round_left = true, round_right = true, scale_y = 0.5, scale_x = 0.25);
 
 // x/y center cube with feet
 // @param feet how many feet to add
