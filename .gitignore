@@ -1,3 +1,5 @@
 testing.scad
 prints/*
 *.gcode
+*.stl
+lulzbot parts
