@@ -5,7 +5,6 @@ use <screws.scad>;
 e = 0.01; // small extra for removing artifacts during differencing
 2e= 0.02; // twice epsilon for extra length when translating by -e
 $fn=60; // number of vertices when rendering cylinders
-$render_threads=true; // turning thread rendering on/off
 
 // holder for extraction vials
 // @param positions number of positions
@@ -25,6 +24,7 @@ module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, le
       [length + 2 * supports_gap, width, thickness];
     holes = 6.5;
     holes_height = 10;
+    connect_bars = 2; // connecting bars thickness
 
     echo(str("INFO: rendering spe holder with overall dimensions: ",
       bar[0] + 2 * supports[0], "mm (width) x ",
@@ -43,12 +43,21 @@ module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, le
         for (x = [-1, 1]) {
           translate([x * (bar[0] + supports[0])/2, 0, 0])
             xy_center_cube([supports[0], supports[1] - supports[0], supports[2]]);
+          translate([x * (bar[0]/2 + supports[0] - connect_bars/2), 0, 0])
+            xy_center_cube([connect_bars, supports[1] - supports[0], holes_height]);
           for (y = [-1, 1]) {
             translate([x * (bar[0] + supports[0])/2, y * (supports[1] - supports[0])/2, 0])
                 cylinder(d = supports[0], h = holes_height);
           }
         }
-
+        // crosss bar
+        if (lip_height > 0) {
+          xy_center_cube([bar[0] + 2 * supports[0], connect_bars, holes_height]);
+          xy_center_cube([bar[0], connect_bars, thickness + lip_height]);
+        } else {
+          translate([0, -bar[1]/2, 0])
+          xy_center_cube([bar[0] + 2 * supports[0], connect_bars, holes_height]);
+        }
       }
 
       // vial holders
@@ -80,13 +89,15 @@ module extraction_vial_holder(positions, diameter, spacing, fixed_length = 0, le
         }
       }
 
-      // support set screws (using M4 although it's for M3 screws for low quality printers)
-      // this is what takes very long to render if render_threads = true
+      // support set screws --> use tolerance = -0.1 to make them just small enough for threading
       for (x = [-1, 1]) {
         for (y = [-1, 1]) {
-          translate([x * (bar[0] + supports[0])/2, y * (supports[1] - supports[0])/2, holes_height/2])
+          translate([x * (bar[0]/2 -e), y * (supports[1] - supports[0])/2, holes_height/2])
             rotate([0, x*90, 0])
-              threaded_machine_screw(name = "M4", length = (supports[0] - holes) + 2e);
+              machine_screw(name = "M3", countersink = false, length = supports[0] + 2e, tolerance = -0.1);
+          translate([x * (bar[0]/2 + supports[0]/2 -e), y * (supports[1])/2, holes_height/2])
+            rotate([y*90, 0])
+              machine_screw(name = "M3", countersink = false, length = supports[0]/2 + 2e, tolerance = -0.1);
         }
       }
     }
@@ -176,8 +187,8 @@ if (render_type == "GC" || render_type == "all") {
 }
 
 // pasteur pipette holder
-if (render_type == "pasteur" || render_type == "all") {
-  /*color("yellow")
+if (render_type == "pasteur-bottom" || render_type == "all") {
+  color("orange")
   translate([0, 0, 6.5 * y_spacing])
   extraction_vial_holder(
     positions = positions * 2 - 1,
@@ -185,8 +196,9 @@ if (render_type == "pasteur" || render_type == "all") {
     spacing = spacing/2,
     fixed_length = fixed_length
   );
-  */
+}
 
+if (render_type == "pasteur-top" || render_type == "all") {
   color("yellow")
   translate([0, 0, 7.5 * y_spacing])
   extraction_vial_holder(
