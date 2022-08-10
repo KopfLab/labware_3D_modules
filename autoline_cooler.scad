@@ -22,6 +22,7 @@ $corner_screws_x = $total_x/2 - 2/3 * $wall_thickness; // corner screws location
 $corner_screws_y = $total_y/2 - 2/3 * $wall_thickness; // corner screws location
 $attachment_screws_x = 80/2; // peltier block attachment screws location
 $attachment_screws_y = 34/2; // peltier block attachment screws location
+$screw_driver_notch = [8, 10, 2]; // size of screwdriver notch
 
 module cooler_base(total_x = $total_x, total_y = $total_y, alu_block_x = $alu_block_x, alu_block_y = $alu_block_y, base_height = $base_height, wall_thickness = $wall_thickness, cavity_diameter = $cavity_diameter, cavity_height = $cavity_height, capillary_diameter = $capillary_diameter, capillary_spacing = $capillary_spacing) {
   difference() {
@@ -58,6 +59,10 @@ module cooler_top(total_x = $total_x, total_y = $total_y, top_thickness = $top_t
         translate([x * $attachment_screws_x, y * $attachment_screws_y, -e])
           machine_screw(name = "M5", length = top_thickness + 2e, tolerance = $screw_hole_tolerance, countersink = false);
       }
+    // screw driver notch
+    for (x = [-1, 1])
+      translate([x * (total_x/2 - $screw_driver_notch[0]/2 + e), 0, -e])
+        xy_center_cube($screw_driver_notch);
   }
 }
 
