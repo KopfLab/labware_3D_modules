@@ -5,6 +5,7 @@ function get_screw(name) =
   // different screws
   let(screws = [
     // screw name; screw diameter; countersink parameter (head diameter, head depth)
+    ["M2", 2, [4.5, 3.0]],
     ["M3", 3, [6, 4.5]],
     ["4-40", 2.9, [5.3, 4.5]],
     ["M4", 4, [8, 5.5]], // NOTE: counter sink dimensions not confirmed
