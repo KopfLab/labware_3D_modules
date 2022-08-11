@@ -168,37 +168,3 @@ rotate([90, 0, 0])
 color("green")
 LCD(type = "20x4SF", location = [0, size[1]/2, size[2]/2 + 3.7], rotation = [90, 0, 0])
 box_top(size = size);
-
-//  controller panel
-//color("gray")
-//photon_board(thickness = thickness, location = [-18, 10, 0], with_RJ45 = true, show = show)
-//DB9_serial_port(thickness = thickness, location = [0, -21, 0], show = show)
-//MicroUSB_port(thickness = thickness, location = [31, -21, 0], show = show)
-/*
-union() {
-
-  difference() {
-    box_body(size, wall = thickness, length = size[2] - 2 * thickness, vent_width = 3);
-    translate([-(size[0]/2 + thickness), -(size[1]/2 + thickness), -1])
-    cube([size[0], size[1], size[2] + 2]);
-  }
-  translate([0, 0, - thickness])
-  box_lid(size, thickness = thickness, wall = thickness, holders = thickness, feet = 0, adapter_xs = -1, adapter_ys = 1, adapters = true);
-}
-
-// lid
-translate([0, size[2]/2 - 2 * thickness, size[1]/2 - 2 * thickness])
-rotate([-90, 0, 180])
-color("green")
-union() {
-  difference() {
-    box_body(size, wall = thickness, length = size[2] - 2 * thickness, vent_width = 3);
-    translate([-(size[0]/2 + thickness), -(size[1]/2 - thickness), -1])
-    cube([size[0], size[1], size[2] + 2]);
-  }
-  translate([0, 0, size[2] - thickness])
-  mirror([0, 0, 1])
-  LCD(type = "20x4SF", location = [0, 0, 0])
-  box_lid(size, thickness = thickness, wall = thickness, holders = thickness, feet = 0, adapter_xs = -1, adapters = true);
-}
-*/
