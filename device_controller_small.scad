@@ -6,7 +6,18 @@ show = false;
 thickness = 5;
 size = [100, 60, 50];
 
+// combined front panel and body
+//color("green")
+union() {
+  translate([0, 0, thickness])
+    rotate([0, 0, 180])
+    MicroUSB_port(thickness = thickness, location = [size[0]/2, 0, 25], rotation = [270, 0, 90], port_only = true, show = show)
+    box_body(size, length = size[2], vent_width = 3, vents = 0, attachments_bottom = false);
+  LCD(type = "16x2", location = [0, 0, 0])
+    box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true], adapters = false);
+}
 
+/*
 // back panel with only DB9 serial port
 translate([120, 00, 0])
 color("gray")
@@ -46,3 +57,4 @@ mirror([0, 0, 1])
 color("red")
 LCD(type = "16x2", location = [0, 0, 0])
 box_lid(size, thickness = thickness, feet = 3, feet_params = [8, 0.3, true]);
+*/

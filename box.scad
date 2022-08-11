@@ -11,7 +11,8 @@ use <screws.scad>;
 // @param gap gap between the holders and the body walls (in mm) to avoid too tight
 // @param feet how many feet to include
 // @param feet_params = [foot_height, tolerance, stackable]
-module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, feet_params = [5, 0.3, true]) {
+// @param adatpers = true/false
+module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, feet_params = [5, 0.3, true], adapters = true) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -40,17 +41,20 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
         foot_height = feet_params[0], tolerance = feet_params[1], stackable = feet_params[2]);
 
       // holders
-      for(x=[-1, 1])
-        for(y=[-1, 1]) {
-          translate([x*((size[0]-holder_x[0]-gap)/2-wall), y*((size[1]-holder_x[1]-gap)/2-wall), thickness])
-            xy_center_cube(holder_x);
-          translate([x*((size[0]-holder_y[0]-gap)/2-wall), y*((size[1]-holder_y[1]-gap)/2-wall), thickness])
-            xy_center_cube(holder_y);
+      if (adapters) {
+        for(x=[-1, 1])
+          for(y=[-1, 1]) {
+            translate([x*((size[0]-holder_x[0]-gap)/2-wall), y*((size[1]-holder_x[1]-gap)/2-wall), thickness])
+              xy_center_cube(holder_x);
+            translate([x*((size[0]-holder_y[0]-gap)/2-wall), y*((size[1]-holder_y[1]-gap)/2-wall), thickness])
+              xy_center_cube(holder_y);
+        }
       }
     }
 
     // screw holes
-    translate([0, 0, thickness])
+    if (adapters) {
+      translate([0, 0, thickness])
       for(x=[-1, 1])
         for(y=[-1, 1])
             union() {
@@ -63,6 +67,7 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
                 rotate([0, -x*90, 0])
                   machine_screw("M3", length = wall+holders+gap, tolerance = 0.15, stretch = 0.15, z_plus=z_plus, countersink = false);
             }
+    }
   }
 
 }
@@ -76,7 +81,8 @@ module box_lid(size, thickness = 4, wall = 4, holders = 4, gap = 0.4, feet = 0, 
 // @param vent_width the width of each vent (in mm)
 // @param vent_spacing_mod how much to change vent spacing from default (can be - or +, in mm)
 // @param vents_both_sides whether vents on both or only one side
-module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, vent_spacing_mod = 0, vents_both_sides = true) {
+// @param attachments_tops/bottom true/false whether to include the screw holes for these
+module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, vent_spacing_mod = 0, vents_both_sides = true, attachments_top = true, attachments_bottom = true) {
 
   // constants
   z_plus = 0.1; // how much thicker to make cutouts in z
@@ -106,9 +112,10 @@ module box_body(size, length, wall = 4, holders = 4, vents = 5, vent_width = 1, 
       xy_center_cube([size[0]-2*wall, size[1]-2*wall, length+2*z_plus]);
 
     // screw holes
+    z_list = attachments_top && attachments_bottom ? [-1, 1] : (attachments_top ? [-1] : (attachments_bottom ? [1] : []));
     for(x=[-1, 1])
       for(y=[-1, 1])
-        for(z=[-1, 1])
+        for(z=z_list)
           translate([x*screw_loc[0], y*screw_loc[1], length/2-z*(length/2-screw_loc[2])])
             rotate([0, -x*90, 0])
               machine_screw("M3", wall+holders, tolerance = 0.15, stretch = 0.15, z_plus = z_plus);
