@@ -19,7 +19,7 @@ module LCD(type = "16x2", location = [0,0,0], rotation = [0,0,0]) {
     // name; lcd w, h, thickness (-pcb); lcd center offset (rel. to screws); screw type, x, y, tolerance; screw socket diamter
     ["16x2", [71.5, 24.5, 7.0], [0, -0.8, 0], ["M3", 37.5, 15.5, 0.35], 6],
     ["20x4", [97.5, 40.3, 9.5], [0,  0.0, 0], ["M3", 46.5, 27.6, 0.35], 6], // FIXME not exact
-    ["20x4SF", [87.6, 42.4, 9.2], [0,  0.0, 0], ["M2", 46.35, 27.55, 0.35], 5]
+    ["20x4SF", [87.6, 42.4, 9.2], [0,  0.0, 0], ["M2.5", 46.35, 27.55, 0.35], 5]
   ];
   type_idx = search([type], types)[0];
   if (type_idx == []) {
