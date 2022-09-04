@@ -14,15 +14,16 @@ size = [115, 75, 75];
 // dimensions
 $walls = 3;
 $adapter_height = 8;
-$adapter_width = 5;
-$rail_width = 1;
+$adapter_width = 6;
+$rail_width = 2;
 $vents = 5;
 $vent_width = 3;
 $lipo_cage = [11, 52, 40];
 $lipo_cage_walls = 1;
+$microusb_port = 12;
 
 // general settings
-$vertical_stretch = 0.15; // vertical extra stretch
+$vertical_stretch = 0.2; // vertical extra stretch
 $material_tolerance = 0.025; // t-glase
 $hexnut_z_tolerance = 0.1 + 2 * $material_tolerance; // extra depth cut out to fit hex nut
 $screw_hole_tolerance = 0.1 + 2 * $material_tolerance; // tolerance for screw holes
@@ -37,18 +38,20 @@ module box_base(size, walls = $walls, adapter_height = $adapter_height, adapter_
       // base attachment screws
       for (x = [-1, 0, 1])
         for (z = [-1, 1])
-          translate([0.1 * size[2] + x * size[0]/3, -size[1]/2 + walls, 0.65 * size[2] + x * z * size[2]/5])
+          translate([x * size[0]/3, -size[1]/2 + walls, 0.55 * size[2] + x * z * size[2]/5])
           rotate([90, 90, 0])
           translate([0, 0, -e])
-          machine_screw("M4", length = walls + 2e, stretch = $vertical_stretch, tolerance = $screw_hole_tolerance);
+          machine_screw("M4", length = walls + 2e, stretch = 2 * $vertical_stretch, tolerance = $screw_hole_tolerance);
     }
-    // lipo battery cage
+    // lipo battery cage - don't use, can be too far away from the connector and makes the print messy
+    /*
     translate([-(size[0] - $lipo_cage[0] - $lipo_cage_walls)/2 + walls, -(size[1] - $lipo_cage[1] - $lipo_cage_walls)/2 + walls, walls])
     difference() {
       xy_center_cube($lipo_cage + [$lipo_cage_walls, $lipo_cage_walls, 0]);
       translate([-$lipo_cage_walls/2, -$lipo_cage_walls/2, 0])
         xy_center_cube($lipo_cage + [e, e, e]);
     }
+    */
     // adapters
     difference() {
       // adapter rails
@@ -91,7 +94,14 @@ module box_top(size, walls = $walls, adapter_height = $adapter_height, vents = $
               translate([0, y * (0.7 * size[1])/2, 0])
                 cylinder(d = vent_width, h = walls + 2e);
           }
-
+     // micro usb port to reach microcontroller
+     translate([size[0]/2 - walls - e, -size[1]/2 + 39.2, 24.2])
+     rotate([0, 90, 0])
+     union() {
+       for (y = [-1, 1]) translate([0, y * $microusb_port/2, 0])
+         cylinder(d = $microusb_port, h = walls + 2e);
+       xy_center_cube([$microusb_port, $microusb_port, walls + 2e]);
+     }
   }
 }
 
@@ -129,27 +139,31 @@ module box_adapter_nut_and_screw(walls = $walls, adapter_height = $adapter_heigh
 module swiss_board(thickness, location = [0,0,0], show = false) {
   rotation = [0,0,0];
   screws = ["M3", 28, 16.5, 0.2];
-  board = [64, 42, 1.6, 10];
-  power = [3, 7, board[2]];
-  molex_power = [10, 9.8, 13.4];
-  molex_signal = [25, 6.6, 13.4];
-  molex_signal_top = [9, 9.8, 13.4];
+  board = [64, 42, 1.6, 6];
   antenna = [9, 3, 15];
-
-  power_location = [board[0]/2 + power[0]/2, 0, thickness + board[3]];
-  molex_power_location = [board[0]/2 - molex_power[0]/2 - 0.5, 2, 0];
-  molex_signal_location1 = [12, board[1]/2 - molex_signal[1]/2 + 2.7, 0];
-  molex_signal_location2 = [2.6, -board[1]/2 + molex_signal[1]/2 + 0.3, 0];
   antenna_location = [-15, board[1]/2 - antenna[1]/2 + 3, 0];
+
+  // ll = max xy distance of the cut out relative to the lower left corner of the pcb
+  // up = max xy distance of the cut out relative to the upper right corner of the pcb
+  function get_cutout(ll, ur, tolerance = [1, 1]) =
+    [ll[0] + ur[0] - board[0] + tolerance[0], ll[1] + ur[1] - board[1] + tolerance[1], board[3] + thickness];
+  function get_pos(ll, ur) =
+    [(ll[0] - ur[0])/2, (ll[1] - ur[1])/2, 0];
+
+  signal_top_ll= [48.9, 41.8]; signal_top_ur= [29.7, 7.2];
+  signal_bot_ll = [55.9, 6.2]; signal_bot_ur = [29.7, 42.6];
+  power1_ll = [7.3, 12.4]; power1_ur = [64.3, 36.2];
+  power2_ll = [16.3, 12.4]; power2_ur = [55.3, 36.2];
+  mosfet_ll = [28.9, 24.9]; mosfet_ur = [42.8, 24.1];
 
   // arrangment
   panel_attachment(thickness, screws, board, location, rotation, show)
-  panel_cut_out(thickness = thickness, cutout = molex_power, location = location + molex_power_location, rotation = rotation, show = show)
-  panel_cut_out(thickness = thickness, cutout = molex_signal, location = location + molex_signal_location1 + [0, -1.6, 0], rotation = rotation, show = show)
-  panel_cut_out(thickness = thickness, cutout = molex_signal_top, location = location + molex_signal_location1, rotation = rotation, show = show)
-  panel_cut_out(thickness = thickness, cutout = molex_signal, location = location + molex_signal_location2 + [0, -1.6, 0], rotation = rotation, show = show)
-  panel_cut_out(thickness = thickness, cutout = molex_signal_top, location = location + molex_signal_location2, rotation = rotation, show = show)
-  panel_cut_out(thickness = thickness, cutout = antenna, location = location + antenna_location, rotation = rotation, show = show)
+  panel_cut_out(cutout = get_cutout(signal_top_ll, signal_top_ur), location = location + get_pos(signal_top_ll, signal_top_ur), rotation = rotation, show = show)
+  panel_cut_out(cutout = get_cutout(signal_bot_ll, signal_bot_ur), location = location + get_pos(signal_bot_ll, signal_bot_ur), rotation = rotation, show = show)
+  panel_cut_out(cutout = get_cutout(power1_ll, power1_ur), location = location + get_pos(power1_ll, power1_ur), rotation = rotation, show = show)
+  panel_cut_out(cutout = get_cutout(power2_ll, power2_ur), location = location + get_pos(power2_ll, power2_ur), rotation = rotation, show = show)
+  panel_cut_out(cutout = get_cutout(mosfet_ll, mosfet_ur), location = location + get_pos(mosfet_ll, mosfet_ur), rotation = rotation, show = show)
+  panel_cut_out(cutout = antenna, location = location + antenna_location, rotation = rotation, show = show)
   children(0);
 
 }
@@ -157,14 +171,14 @@ module swiss_board(thickness, location = [0,0,0], show = false) {
 
 // base
 rotate([90, 0, 0])
-swiss_board(thickness = thickness, location = [-5, 4, 0], show = show)
-DB9_serial_port(thickness = thickness, location = [-9, -27, 0], show = show)
-MicroUSB_port(thickness = thickness, location = [31, -27, 0], show = show)
+swiss_board(thickness = thickness, location = [15, 2, 0], show = show)
+DB9_serial_port(thickness = thickness, location = [-4, -29, 0], show = show)
+DB9_serial_port(thickness = thickness, location = [32, -29, 0], show = show)
 box_base(size = size);
 
 // lid
 translate([0, -30, 30])
 rotate([90, 0, 0])
 color("green")
-LCD(type = "20x4SF", location = [0, size[1]/2, size[2]/2 + 3.7], rotation = [90, 0, 0])
+!LCD(type = "20x4SF", location = [0, size[1]/2, size[2]/2 + 4.5], rotation = [90, 0, 0])
 box_top(size = size);
