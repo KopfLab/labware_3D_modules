@@ -112,7 +112,7 @@ module panel_screw_in (thickness, cutout, face, screws, location = [0,0,0], rota
 
 // standard panel cutout (use screw_in or snap_in for fastening cutouts)
 // use x_round and/or y_round to add round panel cutouts to the square
-// @param thickness how thick base board is
+// @param thickness how thick base board is (NOT used)
 // @param cutout dimensions of snap in cutout (length, width, thickness)
 // @param location central point of the cutout
 // @param rotation how much to rotate
