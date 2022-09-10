@@ -11,7 +11,7 @@ $use_anti_brim_rails = true; // whether to use anti-brim rails
 // common sizes
 $tr_unit_length = 50;
 $tr_base_height = 30;
-$tr_base_corner_radius = 5;
+$tr_base_corner_radius = 3;
 
 $tr_adapter_width_max = 22;
 $tr_adapter_width_max_tol = 1.1; // extra tolerance at the max width (TODO: consider consolidating the tolerances)
@@ -19,26 +19,49 @@ $tr_adapter_width_min = 17;
 $tr_adapter_width_min_tol = 1.1; // extra tolerance at the min width
 $tr_adapter_depth = 5;
 $tr_adapter_corner_radius = 1;
+$tr_adapter_top_slot_height = 5;
 
 $tr_horizontal_spring = true; // whether to have a horizontal spring
 $tr_vertical_spring = false; // whether to have a vertical spring
 $tr_adapter_spring_base = 3.75; // depth start of the spring
 $tr_adapter_spring_depth = 2.75; // total depth of the spring
 $tr_adapter_spring_attachment = 5; // attachment width
-$tr_adapter_spring_thickness = 1; // thickness at narrowest point of the spring
+$tr_adapter_spring_thickness = 0.8; // thickness at narrowest point of the spring
 $tr_adapter_spring_corner_radius = 2; // radius of rounding at top/bottom of spring (not currently used)
 
+$tr_min_wall_width = 1.5; // minimum wall width for tube cutouts
 $tr_tube_base_min = 2; // minimum thickness of base below tube holes
 $tr_tube_tolerance = 0.2; // diameter tolerance for good fit
 
 // @param x_scale how many unit lengths in x
 // @param y_scale how many unit lengths in y
-module modular_rack(x_scale = 1, y_scale = 1, anti_brim_rails = $use_anti_brim_rails) {
+// @param tube_diameter
+// @param tube_spacing (default is 2 * tube_diameter)
+// @param tube_height
+// @param tube_base_diameter
+// @param tube_base_height
+// @param allow_diagonal whether diagonally offset tube arrangements are okay
+// @param anti_brim_rails
+module modular_rack(x_scale = 1, y_scale = 1,
+      tube_diameter = 0,
+      tube_spacing = 0,
+      tube_height = $tr_base_height,
+      tube_base_diameter = 0,
+      tube_base_height = 0,
+      allow_diagonal = true,
+      anti_brim_rails = $use_anti_brim_rails) {
+
+  // calc space
+  actual_tube_spacing = (tube_spacing > 0) ? tube_spacing : 2 * tube_diameter;
+  function space(xy_scale) = xy_scale * $tr_unit_length - $tr_adapter_depth - $tr_base_corner_radius - $tr_min_wall_width;
+  function n(space, multiplier) = (space - tube_diameter - $tr_tube_tolerance - $tr_min_wall_width) / (actual_tube_spacing * multiplier);
+
   union() {
     difference() {
+      // center cube with springs
       union() {
         // center cube
-        rounded_center_cube([x_scale * $tr_unit_length, y_scale * $tr_unit_length, $tr_base_height], corner_radius = $tr_base_corner_radius, center_z = false, center_x = false, center_y = false, round_z = true);
+        rounded_center_cube([x_scale * $tr_unit_length, y_scale * $tr_unit_length, $tr_base_height], corner_radius = $tr_base_corner_radius, center_z = false, center_x = false, center_y = false, round_z = true, round_y = [true, true, false, false], round_x = [true, true, false, false]);
         // adapters with springs
         for (x = [0:x_scale-1])
           translate([ (1/2 + x) * $tr_unit_length - $tr_adapter_width_max/2, y_scale * $tr_unit_length, 0])
@@ -48,6 +71,7 @@ module modular_rack(x_scale = 1, y_scale = 1, anti_brim_rails = $use_anti_brim_r
             rotate([0, 0, 90])
               modular_rack_adapter_with_spring(anti_brim_rails = anti_brim_rails);
       }
+
       // adapter cutouts
       for (x = [0:x_scale-1])
         translate([ (1/2 + x) * $tr_unit_length - $tr_adapter_width_max/2, 0, 0])
@@ -56,44 +80,126 @@ module modular_rack(x_scale = 1, y_scale = 1, anti_brim_rails = $use_anti_brim_r
         translate([x_scale * $tr_unit_length, (1/2 + y) * $tr_unit_length - $tr_adapter_width_max/2, 0])
           rotate([0, 0, 90])
             modular_rack_adapter_cutout();
+
+      // tube cutouts
+      if (tube_diameter > 0) {
+        x_space = space(x_scale);
+        y_space = space(y_scale);
+        tube_height_start = (tube_height > $tr_base_height - $tr_tube_base_min) ? $tr_tube_base_min : $tr_base_height - tube_height;
+        diagonal_multiplier = 1/sqrt(2);
+
+        // space options
+        x_n_straight = n(x_space, 1);
+        y_n_straight = n(y_space, 1);
+        x_n_diagonal = n(x_space, diagonal_multiplier);
+        y_n_diagonal = n(y_space, diagonal_multiplier);
+        n_straight = (floor(x_n_straight) + 1) * (floor(y_n_straight) + 1);
+        n_diagonal =
+          (floor(x_n_diagonal) + 1 + (floor(x_n_diagonal) + 1) % 2) / 2 *
+            (floor(y_n_diagonal) + 1 + (floor(y_n_diagonal) + 1) % 2) / 2 +
+          (floor(x_n_diagonal) + 1 - (floor(x_n_diagonal) + 1) % 2) / 2 *
+            (floor(y_n_diagonal) + 1 - (floor(y_n_diagonal) + 1) % 2) / 2;
+
+        diagonal = allow_diagonal && n_diagonal > n_straight;
+        if (diagonal) {
+          echo("number of tubes (diagonal): ", n_diagonal);
+        } else {
+          echo("number of tubes (non-diagonal): ", n_straight);
+        }
+
+        // wheter diagonal or not
+        x_n = (diagonal) ? x_n_diagonal : x_n_straight;
+        y_n = (diagonal) ? y_n_diagonal : y_n_straight;
+        multiplier = (diagonal) ? diagonal_multiplier : 1;
+        xs = (x_n > 1) ? [ for (i = [0 : 1 : floor(x_n)]) i ] : 0;
+        ys = (y_n > 1) ? [ for (i = [0 : 1 : floor(y_n)]) i ] : 0;
+
+        // make all tube slots
+        for (x = xs) for (y = ys) {
+          if (!diagonal || (x%2) == (y%2) ) {
+            translate([ (x - floor(x_n)/2) * multiplier * actual_tube_spacing, (y - floor(y_n)/2) * multiplier * actual_tube_spacing, 0])
+            translate([x_space / 2 + $tr_base_corner_radius, y_space / 2 + $tr_adapter_depth + $tr_min_wall_width, 0])
+            union() {
+              translate([0, 0, tube_height_start + tube_base_height])
+                cylinder(h = tube_height - tube_base_height + $e, d = tube_diameter + $tr_tube_tolerance);
+              translate([0, 0, tube_height_start])
+                cylinder(h = tube_base_height + $e, d1 = tube_base_diameter + $tr_tube_tolerance, d2 = tube_diameter + $tr_tube_tolerance);
+              if (tube_height > $tr_base_height - $tr_tube_base_min) {
+                translate([0, 0, -$e])
+                  cylinder(h = $tr_base_height + $2e, d = tube_base_diameter + $tr_tube_tolerance);
+              }
+            }
+          }
+        }
+      }
     }
     // anti brim rails
     if (anti_brim_rails) {
-      for (x = [0:x_scale-1])
+      // adapter guards
+      for (x = [0:x_scale-1]) {
         translate([ (1/2 + x) * $tr_unit_length - $tr_adapter_width_max/2, 0, 0])
           cube([$tr_adapter_width_max, $anti_brim_rails, $anti_brim_rails]);
-      for (y = [0:y_scale-1])
+      }
+      for (y = [0:y_scale-1]) {
         translate([x_scale * $tr_unit_length, (1/2 + y) * $tr_unit_length - $tr_adapter_width_max/2, 0])
           rotate([0, 0, 90])
             cube([$tr_adapter_width_max, $anti_brim_rails, $anti_brim_rails]);
+      }
+      // adapter cages
+      for (x = [-1, 1]) {
+        translate([x_scale * $tr_unit_length/2 - $anti_brim_rails/2 + x * (x_scale * $tr_unit_length/2 - $anti_brim_rails/2 - $tr_base_corner_radius), y_scale * $tr_unit_length, 0])
+          cube([$anti_brim_rails, $tr_adapter_spring_base + $tr_adapter_spring_depth, $anti_brim_rails]);
+        translate([$tr_base_corner_radius, y_scale * $tr_unit_length + $tr_adapter_spring_base + $tr_adapter_spring_depth, 0])
+          cube([x_scale * $tr_unit_length - 2 * $tr_base_corner_radius, $anti_brim_rails, $anti_brim_rails]);
+      }
+      for (y = [-1, 1]) {
+        translate([-$tr_adapter_spring_base - $tr_adapter_spring_depth, y_scale * $tr_unit_length/2 - $anti_brim_rails/2 + y * (y_scale * $tr_unit_length/2 - $anti_brim_rails/2 - $tr_base_corner_radius), 0])
+          cube([$tr_adapter_spring_base + $tr_adapter_spring_depth, $anti_brim_rails, $anti_brim_rails]);
+        translate([-$tr_adapter_spring_base - $tr_adapter_spring_depth, $tr_base_corner_radius, 0])
+          cube([$anti_brim_rails, y_scale * $tr_unit_length - 2 * $tr_base_corner_radius, $anti_brim_rails]);
+      }
     }
   }
 }
 
 // adapter cutout for attachments
 module modular_rack_adapter_cutout() {
-  translate([0, -$2e, $tr_base_height/2])
-    linear_extrude(height = $tr_base_height + $2e, center = true)
-      translate([0, $tr_adapter_depth])
-        mirror([0, 1])
-          difference() {
-            square([$tr_adapter_width_max, $tr_adapter_depth + $e]);
-            diff = ($tr_adapter_width_max - $tr_adapter_width_min)/2  * $tr_adapter_corner_radius / $tr_adapter_depth ;
-            for (x = [0, 1])
-              translate([x * ($tr_adapter_width_max + $2e) - $e, 0]) mirror([x, 0, 0])
-              difference() {
-                polygon( points=[
-                  [0, 0],
-                  [($tr_adapter_width_max - $tr_adapter_width_min)/2, $tr_adapter_depth],
-                  [0, $tr_adapter_depth]
-                ]);
-                translate([($tr_adapter_width_max - $tr_adapter_width_min)/2 - $tr_adapter_corner_radius - diff, $tr_adapter_depth - $tr_adapter_corner_radius])
+  union() {
+    // top and bottom slot cutout
+    for (x = [-1, 1])
+      translate([$tr_adapter_width_max/2, $tr_adapter_depth -  2 * $2e, $tr_base_height/2 - x * ($tr_base_height/2 - $tr_adapter_top_slot_height)])
+        rotate([0, x * 90, 0])
+        linear_extrude(height = $tr_adapter_width_max, center = true)
+        polygon( points=[
+          [0, 0],
+          [$tr_adapter_top_slot_height + $e, $tr_adapter_spring_base + $tr_adapter_spring_depth - $tr_adapter_depth + $2e],
+          [$tr_adapter_top_slot_height + $e, 0]
+        ]);
+
+    // puzzle piece cutout with smooth edges
+    translate([0, -$2e, $tr_base_height/2])
+      linear_extrude(height = $tr_base_height + $2e, center = true)
+        translate([0, $tr_adapter_depth])
+          mirror([0, 1])
+            difference() {
+              square([$tr_adapter_width_max, $tr_adapter_depth + $e]);
+              diff = ($tr_adapter_width_max - $tr_adapter_width_min)/2  * $tr_adapter_corner_radius / $tr_adapter_depth ;
+              for (x = [0, 1])
+                translate([x * ($tr_adapter_width_max + $2e) - $e, 0]) mirror([x, 0, 0])
                 difference() {
-                  square( 2 * $tr_adapter_corner_radius + $e);
-                  circle(r = $tr_adapter_corner_radius);
+                  polygon( points=[
+                    [0, 0],
+                    [($tr_adapter_width_max - $tr_adapter_width_min)/2, $tr_adapter_depth],
+                    [0, $tr_adapter_depth]
+                  ]);
+                  translate([($tr_adapter_width_max - $tr_adapter_width_min)/2 - $tr_adapter_corner_radius - diff, $tr_adapter_depth - $tr_adapter_corner_radius])
+                  difference() {
+                    square( 2 * $tr_adapter_corner_radius + $e);
+                    circle(r = $tr_adapter_corner_radius);
+                  }
                 }
               }
-            }
+    }
 }
 
 // adapter with spring for attachments
@@ -102,19 +208,20 @@ module modular_rack_adapter_with_spring(anti_brim_rails = $use_anti_brim_rails, 
     $tr_adapter_spring_base / $tr_adapter_depth * ($tr_adapter_width_max - $tr_adapter_width_max_tol - $tr_adapter_width_min + $tr_adapter_width_min_tol);
   spring_location =
     ($tr_adapter_width_max - $tr_adapter_width_min + $tr_adapter_width_min_tol)/2 - $tr_adapter_spring_base / $tr_adapter_depth * ($tr_adapter_width_max - $tr_adapter_width_max_tol - $tr_adapter_width_min + $tr_adapter_width_min_tol)/2;
+  spring_height = $tr_base_height - $tr_base_corner_radius;
   union() {
     // vertical spring
     if (vertical_spring) {
-      translate([spring_location, $tr_adapter_spring_base, $tr_base_height/2])
+      translate([spring_location, $tr_adapter_spring_base, spring_height/2])
         rotate([0, 90, 0])
           difference() {
-            resize([$tr_base_height, $tr_adapter_spring_depth * 2, spring_width])
+            resize([spring_height, $tr_adapter_spring_depth * 2, spring_width])
               cylinder(h = spring_width, d = $tr_adapter_spring_depth * 2);
             translate([0, 0, -$e])
-              resize([$tr_base_height - 2 * $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2, spring_width + $2e])
+              resize([spring_height - 2 * $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2, spring_width + $2e])
                 cylinder(h = spring_width + $2e, d = ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2);
-            translate([-$tr_base_height/2, -$tr_adapter_spring_depth * 2, -$e])
-              cube([$tr_base_height, $tr_adapter_spring_depth * 2, spring_width + $2e]);
+            translate([-spring_height/2, -$tr_adapter_spring_depth * 2, -$e])
+              cube([spring_height, $tr_adapter_spring_depth * 2, spring_width + $2e]);
           }
     }
 
@@ -123,27 +230,28 @@ module modular_rack_adapter_with_spring(anti_brim_rails = $use_anti_brim_rails, 
       translate([spring_width/2 + spring_location, $tr_adapter_spring_base, 0])
         difference() {
           // outer spring wall
-          resize([spring_width, $tr_adapter_spring_depth * 2, $tr_base_height])
-            cylinder(h = $tr_base_height, d = $tr_adapter_spring_depth * 2);
+          resize([spring_width, $tr_adapter_spring_depth * 2, spring_height])
+            cylinder(h = spring_height, d = $tr_adapter_spring_depth * 2);
           // inner spring wall
           translate([0, 0, -$e])
-            resize([spring_width - $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2, $tr_base_height + $2e])
-              cylinder(h = $tr_base_height + $2e, d = ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2);
+            //resize([spring_width - $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2, spring_height + $2e])
+            resize([spring_width - 2 * $tr_adapter_spring_thickness, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2, spring_height + $2e])
+              cylinder(h = spring_height + $2e, d = ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2);
           // half wall only
           translate([-spring_width/2, -$tr_adapter_spring_depth, -$e])
-            cube([spring_width, $tr_adapter_spring_depth, $tr_base_height + $2e]);
+            cube([spring_width, $tr_adapter_spring_depth, spring_height + $2e]);
         }
     }
 
     // adapter base
-    translate([0, 0, $tr_base_height/2])
-    linear_extrude(height = $tr_base_height, center = true)
+    translate([0, 0, spring_height/2])
+    linear_extrude(height = spring_height, center = true)
     difference() {
       // adapter shape
       polygon( points=[
         [($tr_adapter_width_max - $tr_adapter_width_min + $tr_adapter_width_min_tol)/2, 0],
-        [$tr_adapter_width_max_tol/2, $tr_adapter_depth],
-        [$tr_adapter_width_max - $tr_adapter_width_max_tol/2, $tr_adapter_depth],
+        [spring_location, $tr_adapter_spring_base],
+        [spring_location + spring_width, $tr_adapter_spring_base],
         [($tr_adapter_width_max + $tr_adapter_width_min - $tr_adapter_width_min_tol)/2, 0],
       ]);
       // space for spring
@@ -151,19 +259,27 @@ module modular_rack_adapter_with_spring(anti_brim_rails = $use_anti_brim_rails, 
         square($tr_adapter_width_max);
       // additional cutout for horizontal spring
       if (horizontal_spring) {
-        translate([spring_width/2 + spring_location, $tr_adapter_spring_base])
-          resize([spring_width - $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2])
-            circle(d = ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2);
-
+        //translate([spring_width/2 + spring_location, $tr_adapter_spring_base])
+        //  resize([spring_width - $tr_adapter_spring_attachment, ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2])
+        //    circle(d = ($tr_adapter_spring_depth - $tr_adapter_spring_thickness) * 2);
+        // complete inner cutout
+        polygon( points=[
+          [($tr_adapter_width_max - $tr_adapter_width_min + $tr_adapter_width_min_tol)/2 + 1.5 * $tr_adapter_spring_thickness, 0],
+          [spring_location + $tr_adapter_spring_thickness, $tr_adapter_spring_base],
+          [spring_location + spring_width - $tr_adapter_spring_thickness, $tr_adapter_spring_base],
+          [($tr_adapter_width_max + $tr_adapter_width_min - $tr_adapter_width_min_tol)/2 - 1.5 * $tr_adapter_spring_thickness, 0],
+        ]);
       }
     }
 
     // anti brim rails
+    /*
     if (anti_brim_rails) {
       for (x = [0, 1])
         translate([spring_location + x * ($tr_adapter_width_max - 2 * spring_location - $anti_brim_rails), 0, 0])
           cube([$anti_brim_rails, $tr_adapter_spring_base, $anti_brim_rails]);
     }
+    */
   }
 }
 
@@ -229,45 +345,32 @@ module rounded_center_cube (size, corner_radius, round_x = false, round_y = fals
 
 // bottles
 50ml_falcon_lid_diameter = 34.5; // lid diameter
-50ml_falcon_tube_diameter = 28.5; // measured diameter
+50ml_falcon_tube_diameter = 28.7; // measured diameter
 50ml_falcon_base_height = 14.5; // base height
 50ml_falcon_base_diameter = 7.5; // base diameter
 
-15ml_falcon_lid_diameter = 23.0; // lid diameter
+15ml_falcon_lid_diameter = 22.0; // lid diameter
 15ml_falcon_tube_diameter = 16.5; // tube diameter
 15ml_falcon_base_height = 21.5; // base height
 15ml_falcon_base_diameter = 6.0; // base diameter
 
-// 50 ml test
-difference() {
-  x_scale = 2;
-  modular_rack(x_scale = x_scale, y_scale = 1);
-  y_offset = 0.38;
-  x_offset = sqrt(1 - pow(y_offset, 2)); // to keep overall center center distance the same
-  for(x = [-1, 0, 1])
-  for(y = [0])
-  translate([-x * x_offset * 50ml_falcon_lid_diameter,  (-y_offset/2 + abs(x + 1)%2 * y_offset) * 50ml_falcon_lid_diameter, 0]) {
-    translate([(x_scale * $tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, $tr_tube_base_min + 50ml_falcon_base_height])
-      cylinder(h = $tr_base_height, d = 50ml_falcon_tube_diameter + $tr_tube_tolerance);
-    translate([(x_scale * $tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, $tr_tube_base_min])
-        cylinder(h = 50ml_falcon_base_height + $e, d1 = 50ml_falcon_base_diameter + $tr_tube_tolerance, d2 = 50ml_falcon_tube_diameter + $tr_tube_tolerance);
-    translate([(x_scale * $tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, -$e])
-      cylinder(h = $tr_base_height + $2e, d = 50ml_falcon_base_diameter + $tr_tube_tolerance);
-  }
-}
+!modular_rack(x_scale = 1, y_scale = 1,
+  tube_diameter = 15ml_falcon_tube_diameter,
+  tube_spacing = 15ml_falcon_lid_diameter,
+  tube_base_height = 15ml_falcon_base_height,
+  tube_base_diameter = 15ml_falcon_base_diameter
+);
 
-// 15 ml test
-!difference() {
-  modular_rack(x_scale = 1, y_scale = 1);
-  offset = 1; //sqrt(2);
-  for(x = [-1,1 ])
-  for(y = [-1,1 ])
-  translate([-x * 1/(offset * 2) * 15ml_falcon_lid_diameter,  y * 1/(offset * 2) * 15ml_falcon_lid_diameter, 0]) {
-    translate([($tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, $tr_tube_base_min + 15ml_falcon_base_height])
-      cylinder(h = $tr_base_height, d = 15ml_falcon_tube_diameter + $tr_tube_tolerance);
-    translate([($tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, $tr_tube_base_min])
-        cylinder(h = 15ml_falcon_base_height + $e, d1 = 15ml_falcon_base_diameter + $tr_tube_tolerance, d2 = 15ml_falcon_tube_diameter + $tr_tube_tolerance);
-    translate([($tr_unit_length - $tr_adapter_depth)/2, ($tr_unit_length + $tr_adapter_depth)/2, -$e])
-      cylinder(h = $tr_base_height + $2e, d = 15ml_falcon_base_diameter + $tr_tube_tolerance);
-  }
-}
+modular_rack(x_scale = 2, y_scale = 2,
+  tube_diameter = 50ml_falcon_tube_diameter,
+  tube_spacing = 50ml_falcon_lid_diameter,
+  tube_base_height = 50ml_falcon_base_height,
+  tube_base_diameter = 50ml_falcon_base_diameter
+);
+
+modular_rack(x_scale = 3, y_scale = 1,
+  tube_diameter = 50ml_falcon_tube_diameter,
+  tube_spacing = 50ml_falcon_lid_diameter,
+  tube_base_height = 50ml_falcon_base_height,
+  tube_base_diameter = 50ml_falcon_base_diameter
+);
