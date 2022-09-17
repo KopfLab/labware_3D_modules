@@ -124,7 +124,7 @@ module modular_rack(x_scale = 1, y_scale = 1,
                 cylinder(h = tube_height - tube_base_height + $e, d = tube_diameter + $tr_tube_tolerance);
               translate([0, 0, tube_height_start])
                 cylinder(h = tube_base_height + $e, d1 = tube_base_diameter + $tr_tube_tolerance, d2 = tube_diameter + $tr_tube_tolerance);
-              if (tube_height > $tr_base_height - $tr_tube_base_min) {
+              if (tube_base_diameter > 0 || tube_height > $tr_base_height - $tr_tube_base_min) {
                 translate([0, 0, -$e])
                   cylinder(h = $tr_base_height + $2e, d = tube_base_diameter + $tr_tube_tolerance);
               }
@@ -354,7 +354,21 @@ module rounded_center_cube (size, corner_radius, round_x = false, round_y = fals
 15ml_falcon_base_height = 21.5; // base height
 15ml_falcon_base_diameter = 6.0; // base diameter
 
+2ml_microcentrifuge_lid_diameter = 13.8;
+2ml_microcentrifuge_tube_diameter = 11.0;
+2ml_microcentrifuge_base_height = 5.0;
+2ml_microcentrifuge_base_diameter = 3.5;
+2ml_microcentrifuge_total_height = 25;
+
 !modular_rack(x_scale = 1, y_scale = 1,
+  tube_diameter = 2ml_microcentrifuge_tube_diameter,
+  tube_spacing = 2ml_microcentrifuge_lid_diameter,
+  tube_base_height = 2ml_microcentrifuge_base_height,
+  tube_base_diameter = 2ml_microcentrifuge_base_diameter,
+  tube_height = 2ml_microcentrifuge_total_height
+);
+
+modular_rack(x_scale = 1, y_scale = 1,
   tube_diameter = 15ml_falcon_tube_diameter,
   tube_spacing = 15ml_falcon_lid_diameter,
   tube_base_height = 15ml_falcon_base_height,
