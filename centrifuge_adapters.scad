@@ -8,18 +8,20 @@ $2e = 2 * $e; // twice epsilon for extra length when translating by -e
 $fn = 60; // number of vertices when rendering cylinders and spheres
 
 // sizes
-$ca_height = 24;
+$ca_height = 28;
 $ca_base_diameter = 137; // 69;
 $ca_upper_diameter = 51;
-$ca_max_diameter = 85; // how thick it can be and still fit
-$ca_axle_diameter = 8;
+$ca_max_diameter = 100; // how thick it can be and still fit
+// could add up to 20 to this!
+
+$ca_axle_diameter = 9;
 $ca_upper_rim = 2; // thickness of rim at top
-$ca_upper_cutout_depth = 8; // how deep to cut out at the top
-$ca_vial_diameter = 11.7 + 0.5; // with tolerance
+$ca_upper_cutout_depth = 10; // how deep to cut out at the top
+$ca_vial_diameter = 11.7 + 2.0; // with tolerance
 $ca_extra_angle = 0; // how much to rotate paste the natural inclide
-$ca_vial_depth = 20;
-$ca_vial_pos_r = 20;
-$ca_vial_pos_z = 16;
+$ca_vial_depth = 23;
+$ca_vial_pos_r = 22.5;
+$ca_vial_pos_z = 18.5;
 $ca_n_vials = 6;
 
 // module for microcentrifuge adapater
