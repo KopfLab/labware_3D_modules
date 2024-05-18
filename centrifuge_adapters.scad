@@ -8,28 +8,31 @@ $2e = 2 * $e; // twice epsilon for extra length when translating by -e
 $fn = 60; // number of vertices when rendering cylinders and spheres
 
 // sizes
-$ca_height = 28;
+$ca_height = 24.75;
 $ca_base_diameter = 137; // 69;
-$ca_upper_diameter = 51;
-$ca_max_diameter = 100; // how thick it can be and still fit
+$ca_upper_diameter = 53;
+$ca_max_diameter = 92; // how thick it can be and still fit
 // could add up to 20 to this!
 
-$ca_axle_diameter = 9;
+$ca_axle_diameter = 8 + 0.75; // diameter with tolerance
 $ca_upper_rim = 2; // thickness of rim at top
-$ca_upper_cutout_depth = 10; // how deep to cut out at the top
-$ca_vial_diameter = 11.7 + 2.0; // with tolerance
-$ca_extra_angle = 0; // how much to rotate paste the natural inclide
+$ca_upper_cutout_depth = $ca_height - 13; // how deep to cut out at the top
+$ca_vial_diameter = 11.7 + 1.5; // with tolerance
+$ca_angle = 57.5; // what angle to use for the tubes
 $ca_vial_depth = 23;
-$ca_vial_pos_r = 22.5;
-$ca_vial_pos_z = 18.5;
+$ca_vial_pos_r = 22;
+$ca_vial_pos_z = 18.25;
 $ca_n_vials = 6;
 
 // module for microcentrifuge adapater
 module centrifuge_adapter() {
 
-  full_height = $ca_height * ( 1 + $ca_upper_diameter/$ca_base_diameter);
-  angle = 90 - atan(full_height / ($ca_base_diameter/2)) - $ca_extra_angle;
-
+  // calculate the angle from the dimensions
+  full_height = $ca_height / ( 1 - $ca_upper_diameter/$ca_base_diameter);
+  angle = 90 - atan(full_height / ($ca_base_diameter/2));
+  echo(angle);
+  // use assigned angle instead
+  //angle = $ca_angle;
 
   difference() {
     cylinder(d1 = $ca_base_diameter, d2 = $ca_upper_diameter, h = $ca_height);
