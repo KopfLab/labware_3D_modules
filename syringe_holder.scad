@@ -1,4 +1,4 @@
-// balch tube tower for optimizing culturing space in the incubator
+// syringe holders for the picarro manual infusion
 use <utils.scad>;
 use <screws.scad>;
 
