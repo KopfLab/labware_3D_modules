@@ -78,6 +78,8 @@ module genie_adapter(cut_in_half = true, walls = true, holders = false) {
 // parameters
 $ga_lid_base = 1.0; // thickness of lid
 $ga_lid_wall = 1.0; // thickness of lid walls
+$ga_lid_spindle_diameter = 6.35 + 0.4; // spindle in center
+$ga_spindle_height = 9; // lid spindle height
 $ga_lid_inner_diameter = $ga_inner_diameter - 3.0; // inner diameter wall for lid offset
 $ga_lid_height = 14; // lid height
 
@@ -86,25 +88,45 @@ module genie_lid() {
     union() {
       // outer ring
       cylinder(d = $ga_outer_diameter, h = $ga_lid_base);
+      // middle ring
+      difference() {
+        cylinder(d = $ga_lid_inner_diameter, h = $ga_lid_base + $ga_lid_height);
+        translate([0, 0, -$e])
+        cylinder(d = $ga_lid_inner_diameter - 2 * $ga_lid_wall, h = $ga_lid_base + $ga_lid_height + $2e);
+      }
       // inner ring
       translate([0, 0, 0])
-        cylinder(d = $ga_lid_inner_diameter, h = $ga_lid_base + $ga_lid_height);
+        cylinder(d = $ga_lid_spindle_diameter + 2 * $ga_lid_wall, h = $ga_lid_base + $ga_spindle_height);
+      // spokes
+      difference() {
+        for (i = [1:1:$ga_n_vials/2]) {
+          rotate([0, 0, 180/$ga_n_vials + i * 360/$ga_n_vials])
+          translate([0, 0, ($ga_lid_base + $ga_lid_height)/2])
+          cube([$ga_outer_diameter, $ga_vial_wall, $ga_lid_base + $ga_lid_height], center = true);
+        }
+        translate([0, 0, -$e])
+          cylinder(d = $ga_lid_inner_diameter - 2 * $ga_lid_wall, h = $ga_lid_base + $ga_lid_height + $2e);
+      }
+      // central connectors
+      rotate([0, 0, 3 * 180/$ga_n_vials])
+        translate([0, 0, ($ga_lid_base + $ga_spindle_height)/2])
+          cube([$ga_lid_inner_diameter, $ga_vial_wall, $ga_lid_base + $ga_spindle_height], center = true);
     }
     // central cutout
     translate([0, 0, -$e])
-      cylinder(d = $ga_lid_inner_diameter - 2 * $ga_lid_wall, h = $ga_lid_height + $ga_lid_base + $2e);
+      cylinder(d = $ga_lid_spindle_diameter, h = $ga_lid_height + $ga_lid_base + $2e);
     // screw  holes
-    for (x = [-1, 1]) {
+    /*for (x = [-1, 1]) {
       translate([x * $ga_vial_distance, 0, -$e])
         cylinder(d = $ga_screw_diameter, h = $ga_lid_height + $2e);
     }
     for (y = [-1, 1]) {
       translate([0, y * $ga_vial_distance, -$e])
         cylinder(d = $ga_screw_diameter, h = $ga_lid_height + $2e);
-    }
+    }*/
   }
 }
 
 
-genie_adapter();
-!genie_lid();
+!genie_adapter();
+genie_lid();
