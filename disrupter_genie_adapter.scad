@@ -135,30 +135,66 @@ module genie_lid() {
 
 // beater adapater sizes
 $ba_base_diameter = 145; // location for the vials
-$ba_base_ring = 125; // how far to cut out ring
-$ba_base_max_height = 13.5;
-$ba_base_min_height = 9.5;
+$ba_base_ring = 128; // inner support ring
+$ba_base_max_height = 12.5;
+$ba_base_min_height = 9;
+$ba_base_screw_height = 6; // leaving 3mm for the screw head
 $ba_base_hole_diameter = 10.5;
-$ba_wall = 1.0;
+$ba_wall = 0.9;
 $ba_base_thickness = 0.5;
-$ba_vial_diameter = 11.7;
+$ba_vial_diameter = 11.7 + 0.5; // gc vial diameter plus tolerance
 $ba_vial_n = 24;
 $ba_spokes = 0.1;
+$ba_screw_diameter = 3.0;
+$ba_screw_hole_extra = 0.8; // extra diameter for screw hole (for easy screw threading)
+$ba_screw_bridge = 3; // distance from rings to the screws
 
 module beater_adapter() {
+
+  // calculat screw location
+  outer_screw_location = $ba_base_diameter/2 + $ba_vial_diameter/2 + $ba_wall + $ba_screw_bridge + $ba_wall + $ba_screw_diameter/2;
+  inner_screw_location = $ba_base_diameter/2 - $ba_vial_diameter/2 - $ba_wall - $ba_screw_bridge - $ba_wall - $ba_screw_diameter/2;
 
   difference() {
 
     union() {
-      // inner ring
-      cylinder(d = $ba_base_ring + 2 * $ba_wall, $ba_base_min_height);
 
-      // spokes
-      for (i = [1:1:$ba_vial_n/2]) {
-        rotate([0, 0, i * 360/$ba_vial_n])
-        translate([0, 0, $ba_base_min_height/2])
-        cube([$ba_base_diameter, 2 * $ba_wall + $ba_spokes, $ba_base_min_height], center = true);
+      // inner ring
+      difference() {
+        cylinder(d = $ba_base_ring + 2 * $ba_wall, $ba_base_min_height);
+        translate([0, 0, -$e]) cylinder(d = $ba_base_ring, $ba_base_min_height + $2e);
       }
+
+      // spokes to hole adapters
+      difference() {
+        for (i = [1:1:$ba_vial_n/2]) {
+          rotate([0, 0, (i - 0.5) * 360/$ba_vial_n])
+            translate([0, 0, $ba_base_min_height/2])
+              cube([$ba_base_diameter - $ba_base_hole_diameter + $ba_wall, 2 * $ba_wall + $ba_spokes, $ba_base_min_height], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = $ba_base_ring, $ba_base_min_height + $2e);
+      }
+
+      // spokes to outer screw holes
+      difference() {
+        for (i = [1:1:$ba_vial_n/4]) {
+          rotate([0, 0, (2 * i - 1) * 360/$ba_vial_n])
+            translate([0, 0, $ba_base_screw_height/2])
+              cube([2 * outer_screw_location, 2 * $ba_wall + $ba_spokes, $ba_base_screw_height], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = $ba_base_diameter, $ba_base_min_height + $2e);
+      }
+
+      // spokes to inner screw holes
+      difference() {
+        for (i = [1:1:$ba_vial_n/4]) {
+          rotate([0, 0, (2 * i) * 360/$ba_vial_n])
+            translate([0, 0, $ba_base_screw_height/2])
+              cube([$ba_base_ring, 2 * $ba_wall + $ba_spokes, $ba_base_screw_height], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, $ba_base_min_height + $2e);
+      }
+
       // hole adapters
       difference() {
         // walls
@@ -171,48 +207,228 @@ module beater_adapter() {
           translate([$ba_base_diameter/2 * cos( (i-0.5) * 360/$ba_vial_n), $ba_base_diameter/2 * sin((i-0.5) * 360/$ba_vial_n), -$e])
             cylinder(d = $ba_base_hole_diameter - 2 * $ba_wall, h = $ba_base_min_height + $e);
         }
-        // edge cutous
-        for (i = [1:1:$ba_vial_n/2]) {
-          rotate([0, 0, (i-0.5) * 360/$ba_vial_n])
-          translate([0, 0, $ba_base_min_height/2])
-          cube([2 * $ba_base_diameter, $ba_spokes, $ba_base_min_height + $2e], center = true);
-        }
       }
+
       // vial holders
       for (i = [1:1:$ba_vial_n]) {
         translate([$ba_base_diameter/2 * cos((i-1) * 360/$ba_vial_n), $ba_base_diameter/2 * sin((i-1) * 360/$ba_vial_n), 0])
           cylinder(d = $ba_vial_diameter + 2 * $ba_wall, h = $ba_base_min_height);
       }
+
+      // outer screw holes
+      for (i = [1:1:$ba_vial_n/2]) {
+        translate([outer_screw_location * cos((2 * i-1) * 360/$ba_vial_n), outer_screw_location * sin((2 * i-1) * 360/$ba_vial_n), 0])
+          cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra + 2 * $ba_wall, h = $ba_base_screw_height);
+      }
+
+      // inner screw holes
+      for (i = [1:1:$ba_vial_n/2]) {
+        translate([inner_screw_location * cos((2 * i) * 360/$ba_vial_n), inner_screw_location * sin((2 * i) * 360/$ba_vial_n), 0])
+          cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra + 2 * $ba_wall, h = $ba_base_screw_height);
+      }
     }
 
-    // inner ring
-    translate([0, 0, -$e])
-      cylinder(d = $ba_base_ring, $ba_base_min_height + $2e);
-
-    // spokes cutouts
-    for (i = [1:1:$ba_vial_n/2]) {
-      rotate([0, 0, i * 360/$ba_vial_n])
-      translate([0, 0, $ba_base_min_height/2])
-      cube([$ba_base_diameter, $ba_spokes, $ba_base_min_height + $2e], center = true);
+    // spokes cutout to all holes
+    difference() {
+      for (i = [1:1:2 * $ba_vial_n]) {
+        rotate([0, 0, i/2 * 360/$ba_vial_n])
+          translate([0, 0, $ba_base_min_height/2])
+            cube([$ba_base_diameter, $ba_spokes, $ba_base_min_height + $2e], center = true);
+      }
+      translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, $ba_base_min_height + $2e);
     }
 
+    // spokes cutout to outer screw holes
+    for (i = [1:1:$ba_vial_n/4]) {
+      rotate([0, 0, (2 * i - 1) * 360/$ba_vial_n])
+        translate([0, 0, $ba_base_screw_height/2])
+          cube([2 * outer_screw_location, $ba_spokes, $ba_base_screw_height + $2e], center = true);
+    }
+
+    // spokes cutout to inner screw holes
+    difference() {
+      for (i = [1:1:$ba_vial_n/4]) {
+        rotate([0, 0, (2 * i) * 360/$ba_vial_n])
+          translate([0, 0, $ba_base_screw_height/2])
+            cube([2 * outer_screw_location, $ba_spokes, $ba_base_screw_height + $2e], center = true);
+      }
+      translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, $ba_base_min_height + $2e);
+    }
+/*
     // vial holes
     for (i = [1:1:$ba_vial_n]) {
       translate([$ba_base_diameter/2 * cos((i-1) * 360/$ba_vial_n), $ba_base_diameter/2 * sin((i-1) * 360/$ba_vial_n), -$e])
         cylinder(d = $ba_vial_diameter, h = $ba_base_max_height + $2e);
     }
 
-    // quarter only
-    translate([0, 0, -$e])
-    difference() {
-      cube($ba_base_diameter + 2 * $ba_vial_diameter + 2 * $ba_wall, center = true);
-      cube($ba_base_diameter + 2 * $ba_vial_diameter + 2 * $ba_wall);
+    // outer screw holes
+    for (i = [1:1:$ba_vial_n/2]) {
+      translate([outer_screw_location * cos((2 * i-1) * 360/$ba_vial_n), outer_screw_location * sin((2 * i-1) * 360/$ba_vial_n), -$e])
+        cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra, h = $ba_base_screw_height + $2e);
     }
+
+    // inner screw holes
+    for (i = [1:1:$ba_vial_n/2]) {
+      translate([inner_screw_location * cos((2 * i) * 360/$ba_vial_n), inner_screw_location * sin((2 * i) * 360/$ba_vial_n), -$e])
+        cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra, h = $ba_base_screw_height + $2e);
+    }
+*/
+    // wedge only
+    radius = 2 * outer_screw_location;
+    angles = [4, 56];
+    translate([0, 0, -$e])
+      linear_extrude($ba_base_max_height + $2e)
+        difference() {
+          circle(r = radius + $2e);
+          polygon(concat([[0, 0]], [for(a = angles) [radius * cos(a), radius * sin(a)]]));
+        }
+
+  }
+
+}
+
+$ba_lid_thickness = 0; // thickness of the lid
+$ba_lid_height = 16; // + the 9mm base = 25mm total, i.e. vial minus caps
+$ba_lid_screw_height = 6; // plus 10mm for the hex adapter
+
+module beater_lid() {
+
+  // calculat screw location
+  outer_screw_location = $ba_base_diameter/2 + $ba_vial_diameter/2 + $ba_wall + $ba_screw_bridge + $ba_wall + $ba_screw_diameter/2;
+  inner_screw_location = $ba_base_diameter/2 - $ba_vial_diameter/2 - $ba_wall - $ba_screw_bridge - $ba_wall - $ba_screw_diameter/2;
+  ring_location = $ba_base_diameter/2 + $ba_vial_diameter/2 + $ba_wall + $ba_screw_bridge/2;
+  total_height = $ba_lid_thickness + $ba_lid_height;
+  screws_height = $ba_lid_thickness + $ba_lid_screw_height;
+
+  difference() {
+
+    union() {
+
+      // connector ring
+      difference() {
+        cylinder(d = 2 * ring_location + $ba_wall, total_height);
+          translate([0, 0, -$e])
+            cylinder(d = 2 * ring_location - $ba_wall, total_height + $2e);
+      }
+
+      // spokes for vials
+      difference() {
+        union() {
+          for (i = [1:1:$ba_vial_n/2]) {
+            rotate([0, 0, i * 360/$ba_vial_n])
+              translate([0, 0, screws_height/2])
+                cube([2 * ring_location, 2 * $ba_wall + $ba_spokes, screws_height], center = true);
+          }
+          translate([0, 0, screws_height])
+            for (i = [1:1:$ba_vial_n/2]) {
+              rotate([0, 0, i * 360/$ba_vial_n])
+                translate([0, 0, (total_height - screws_height)/2])
+                  cube([2 * ring_location, $ba_wall, (total_height - screws_height)], center = true);
+            }
+        }
+        translate([0, 0, -$e]) cylinder(d = $ba_base_diameter, total_height + $2e);
+      }
+
+      // spokes to outer screws
+      difference() {
+        for (i = [1:1:$ba_vial_n/4]) {
+          rotate([0, 0, (2 * i - 1) * 360/$ba_vial_n])
+            translate([0, 0, screws_height/2])
+              cube([2 * outer_screw_location, 2 * $ba_wall + $ba_spokes, screws_height], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = $ba_base_diameter, screws_height + $2e);
+      }
+
+      // spokes to inner screws
+      difference() {
+        for (i = [1:1:$ba_vial_n/4]) {
+          rotate([0, 0, (2 * i) * 360/$ba_vial_n])
+            translate([0, 0, screws_height/2])
+              cube([$ba_base_diameter, 2 * $ba_wall + $ba_spokes, screws_height], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, screws_height + $2e);
+      }
+
+      // vial holders
+      for (i = [1:1:$ba_vial_n]) {
+        translate([$ba_base_diameter/2 * cos((i-1) * 360/$ba_vial_n), $ba_base_diameter/2 * sin((i-1) * 360/$ba_vial_n), 0])
+          cylinder(d = $ba_vial_diameter + 2 * $ba_wall, h = total_height);
+      }
+
+      // outer screw holders
+      for (i = [1:1:$ba_vial_n/2]) {
+        translate([outer_screw_location * cos((2 * i-1) * 360/$ba_vial_n), outer_screw_location * sin((2 * i-1) * 360/$ba_vial_n), 0])
+          cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra + 2 * $ba_wall, h = screws_height);
+      }
+
+      // inner screw holders
+      for (i = [1:1:$ba_vial_n/2]) {
+        translate([inner_screw_location * cos((2 * i) * 360/$ba_vial_n), inner_screw_location * sin((2 * i) * 360/$ba_vial_n), 0])
+          cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra + 2 * $ba_wall, h = screws_height);
+      }
+    }
+
+    // spokes cutout to all holes
+    translate([0, 0, screws_height])
+      difference() {
+        for (i = [1:1:2 * $ba_vial_n]) {
+          rotate([0, 0, i/2 * 360/$ba_vial_n])
+            translate([0, 0, total_height/2])
+              cube([$ba_base_diameter, $ba_spokes, total_height + $2e], center = true);
+        }
+        translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, total_height + $2e);
+      }
+
+    // spokes cutout to outer screw holes
+    for (i = [1:1:$ba_vial_n/4]) {
+      rotate([0, 0, (2 * i - 1) * 360/$ba_vial_n])
+        translate([0, 0, screws_height/2])
+          cube([2 * outer_screw_location, $ba_spokes, screws_height + $2e], center = true);
+    }
+
+    // spokes cutout to inner screw holes
+    difference() {
+      for (i = [1:1:$ba_vial_n/4]) {
+        rotate([0, 0, (2 * i) * 360/$ba_vial_n])
+          translate([0, 0, screws_height/2])
+            cube([2 * outer_screw_location, $ba_spokes, screws_height + $2e], center = true);
+      }
+      translate([0, 0, -$e]) cylinder(d = 2 * inner_screw_location, screws_height + $2e);
+    }
+
+    // vial holes
+    for (i = [1:1:$ba_vial_n]) {
+      translate([$ba_base_diameter/2 * cos((i-1) * 360/$ba_vial_n), $ba_base_diameter/2 * sin((i-1) * 360/$ba_vial_n), $ba_lid_thickness - $e])
+        cylinder(d = $ba_vial_diameter, h = total_height - $ba_lid_thickness + $2e);
+    }
+
+    // outer screw holes
+    for (i = [1:1:$ba_vial_n/2]) {
+      translate([outer_screw_location * cos((2 * i-1) * 360/$ba_vial_n), outer_screw_location * sin((2 * i-1) * 360/$ba_vial_n), -$e])
+        cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra, h = screws_height + $2e);
+    }
+
+    // inner screw holes
+    for (i = [1:1:$ba_vial_n/2]) {
+      translate([inner_screw_location * cos((2 * i) * 360/$ba_vial_n), inner_screw_location * sin((2 * i) * 360/$ba_vial_n), -$e])
+        cylinder(d = $ba_screw_diameter + $ba_screw_hole_extra, h = screws_height + $2e);
+    }
+
+    // wedge only
+    radius = 2 * outer_screw_location;
+    angles = [8, 52];
+    translate([0, 0, -$e])
+      linear_extrude(total_height + $2e)
+        difference() {
+          circle(r = radius + $2e);
+          polygon(concat([[0, 0]], [for(a = angles) [radius * cos(a), radius * sin(a)]]));
+        }
 
   }
 
 }
 
 !beater_adapter();
+beater_lid();
 genie_adapter();
 genie_lid();
