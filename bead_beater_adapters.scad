@@ -149,6 +149,8 @@ $ba_screw_diameter = 3.0;
 $ba_screw_hole_extra = 0.8; // extra diameter for screw hole (for easy screw threading)
 $ba_screw_bridge = 3; // distance from rings to the screws
 
+
+// generate bead beater adapter
 module beater_adapter() {
 
   // calculat screw location
@@ -466,7 +468,8 @@ module beater_lid() {
 
 }
 
-//beater_adapter();
+// print these in carbon fiber nylon!
+beater_adapter();
 beater_lid();
-//genie_adapter();
-//genie_lid();
+!genie_adapter();
+genie_lid();
